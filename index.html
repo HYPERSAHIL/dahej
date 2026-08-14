@@ -200,6 +200,15 @@
     font-size:22px;font-weight:800;letter-spacing:-.4px;
     text-transform:uppercase;
   }
+  .insta-hint{
+    background:linear-gradient(135deg,#e8f0fe,#f3f7ff);
+    border:1px solid #c9dbf8;
+    border-radius:12px;
+    padding:14px 18px;
+    margin-bottom:18px;
+  }
+  .insta-hint-q{font-size:13.5px;font-weight:700;color:#1a4fa0;}
+  .insta-hint-a{font-size:12.5px;color:#3c5a8f;margin-top:3px;line-height:1.55;}
   .share-hint{
     margin-top:12px;
     text-align:center;
@@ -290,6 +299,11 @@
     <div class="card">
       <h2 class="bd-title">Dahej Break-down</h2>
       <p class="bd-sub">Here is the detailed break-down of your estimated dahej.</p>
+
+      <div class="insta-hint" id="insta-hint" hidden>
+        <p class="insta-hint-q">Tryna see that message from insta?</p>
+        <p class="insta-hint-a">Put 0 in everything except Age and Depth of puh/Length of dih and Width of puh/Girth of dih. Then hit Calculate Dahej.</p>
+      </div>
 
       <div class="bd-total" id="bd-total">
         <span class="t1">Estimated Dahej</span>
@@ -458,16 +472,19 @@
     var totalBox = document.getElementById("bd-total");
     var communityBox = document.getElementById("bd-community");
     var tip = document.getElementById("bd-tip");
+    var hint = document.getElementById("insta-hint");
 
     if (community) {
       totalBox.hidden = true;
       communityBox.hidden = false;
+      hint.hidden = true;
       ul.innerHTML = "";
       tip.textContent = "pair utne felao jitni badi chadar ho (it wasnt about pair and chadar)";
       return;
     }
     totalBox.hidden = false;
     communityBox.hidden = true;
+    hint.hidden = false;
     tip.textContent = "chyut unti hi fatwao jitna baap ki gand me dahej dene ka dam ho";
 
     var html = "";
