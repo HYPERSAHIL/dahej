@@ -19,6 +19,14 @@ export async function onRequestPost(context) {
   }
 
   // Collision-resistant short id (base62, 5 chars)
+  const kv = context.env.DAHEJ_KV;
+  if (!kv) {
+    return new Response(JSON.stringify({ error: "kv binding missing" }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
   let id = "";
   let attempts = 0;
   const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -32,12 +40,14 @@ export async function onRequestPost(context) {
       id += ALPHABET[n % 62];
       n = Math.floor(n / 62);
     }
-    const existing = await context.env.DAHEJ_KV.get("share:" + id);
+    const existing = await kv.get("share:" + id);
     attempts++;
-    if (attempts > 10) throw new Error("could not allocate id");
+    if (attempts > 10) return new Response(JSON.stringify({ error: "could not allocate id" }), {
+      status: 500, headers: { "content-type": "application/json" },
+    });
   } while (existing !== null);
 
-  await context.env.DAHEJ_KV.put("share:" + id, JSON.stringify(clean), {
+  await kv.put("share:" + id, JSON.stringify(clean), {
     expirationTtl: 60 * 60 * 24 * 90, // 90 days
   });
 
