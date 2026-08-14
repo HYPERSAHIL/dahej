@@ -52,15 +52,7 @@
     display:flex;align-items:center;justify-content:flex-end;
     padding:0 18px;
   }
-  .mark{
-    margin-right:auto;
-    width:30px;height:30px;border-radius:8px;
-    background:var(--accent);color:#fff;
-    font-size:15px;font-weight:700;
-    display:flex;align-items:center;justify-content:center;
-    letter-spacing:-.5px;
-  }
-  .topbar nav{display:flex;align-items:center;gap:6px;}
+  .topbar nav{display:flex;align-items:center;gap:6px;margin-left:auto;}
   .topbar nav a{
     font-size:13.5px;font-weight:600;color:var(--ink-soft);
     padding:7px 12px;border-radius:8px;
@@ -84,17 +76,9 @@
     box-shadow:var(--shadow);
     padding:34px 30px 30px;
   }
-  .eyebrow{
-    display:inline-flex;align-items:center;gap:7px;
-    font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--muted);
-    margin-bottom:10px;
-  }
-  .eyebrow::before{content:"";width:14px;height:2px;background:var(--accent);border-radius:2px;}
+  .calc-head{margin-bottom:26px;}
   h1{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.15;}
   .sub{color:var(--muted);font-size:14.5px;margin-top:6px;}
-
-  .calc-head{margin-bottom:26px;}
 
   /* ---------- form grid ---------- */
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 14px;}
@@ -238,7 +222,6 @@
 
 <div class="topbar">
   <div class="topbar-inner">
-    <span class="mark" aria-hidden="true">₹</span>
     <nav>
       <a href="#/contact">Contact</a>
     </nav>
@@ -251,7 +234,6 @@
   <section id="page-calc" class="page active">
     <div class="card">
       <div class="calc-head">
-        <span class="eyebrow">Calculator</span>
         <h1>Dahej Calculator</h1>
         <p class="sub">Calculate your dahej value</p>
       </div>
@@ -259,13 +241,13 @@
       <form id="calc-form" autocomplete="off">
         <div class="grid">
           <div class="field"><label>Bodycout</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="bodycout"></div>
-          <div class="field"><label>Depth of puh</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="depthPuh"></div>
-          <div class="field"><label>Width of puh</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="widthPuh"></div>
-          <div class="field"><label>i pill consumed till now</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="ipill"></div>
+          <div class="field"><label>Depth of puh/Length of dih</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="depthPuh"></div>
+          <div class="field"><label>Width of puh/Girth of dih</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="widthPuh"></div>
+          <div class="field"><label>i pill consumed till now (Fill only if Female)</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="ipill"></div>
           <div class="field"><label>Unprotected sex count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="unsafe"></div>
           <div class="field"><label>Talking stage count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="talking"></div>
           <div class="field"><label>Situationships count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="situationships"></div>
-          <div class="field"><label>Ex-bf count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="exbf"></div>
+          <div class="field"><label>Ex-bf/gf count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="exbf"></div>
           <div class="field"><label>Relationship count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="relationships"></div>
           <div class="field"><label>Age</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="age"></div>
           <div class="field"><label>Oyo visits</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="oyo"></div>
