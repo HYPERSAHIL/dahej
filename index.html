@@ -5,196 +5,256 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dahej Calculator — Calculate your dahej value</title>
 <meta name="description" content="Calculate your estimated dahej value instantly.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23000'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23fff' font-family='Arial'%3E₹%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#0b0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23fff' font-family='Arial'%3E₹%3C/text%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#f5f5f5;
+    --bg:#f6f7f9;
     --card:#ffffff;
-    --ink:#111111;
-    --muted:#777777;
-    --line:#e5e5e5;
-    --soft:#f2f2f2;
-    --tip:#fff8e1;
+    --ink:#14161a;
+    --ink-soft:#3c4048;
+    --muted:#7a818c;
+    --line:#e6e9ee;
+    --soft:#f1f3f6;
+    --accent:#0b0c10;
+    --accent-hover:#23262e;
+    --ring:rgba(11,12,16,.12);
+    --tip-bg:#fff8e6;
+    --tip-line:#f0c14b;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,20,28,.04),0 12px 32px -8px rgba(16,20,28,.10);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{height:100%;}
+  html{scroll-behavior:smooth;}
   body{
-    background:var(--bg);
+    background:
+      radial-gradient(900px 340px at 85% -10%, rgba(11,12,16,.045), transparent 60%),
+      var(--bg);
     color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:15px;
-    line-height:1.5;
+    line-height:1.55;
     -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
   }
   a{color:inherit;text-decoration:none;}
 
-  /* header */
-  header{
-    background:#000;
-    color:#fff;
-    padding:0 20px;
-    height:56px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    position:sticky;top:0;z-index:10;
+  /* ---------- minimal top bar (Contact only) ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(10px);
+    background:rgba(255,255,255,.82);
+    border-bottom:1px solid var(--line);
   }
-  .brand{font-weight:700;font-size:16px;letter-spacing:.3px;}
-  .brand small{font-weight:500;opacity:.65;}
-  nav{display:flex;align-items:center;gap:22px;font-size:14px;}
-  nav a{opacity:.75;transition:opacity .15s;}
-  nav a:hover{opacity:1;}
-  nav a.active{opacity:1;font-weight:600;}
+  .topbar-inner{
+    max-width:760px;margin:0 auto;
+    height:52px;
+    display:flex;align-items:center;justify-content:flex-end;
+    padding:0 18px;
+  }
+  .mark{
+    margin-right:auto;
+    width:30px;height:30px;border-radius:8px;
+    background:var(--accent);color:#fff;
+    font-size:15px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    letter-spacing:-.5px;
+  }
+  .topbar nav{display:flex;align-items:center;gap:6px;}
+  .topbar nav a{
+    font-size:13.5px;font-weight:600;color:var(--ink-soft);
+    padding:7px 12px;border-radius:8px;
+    transition:color .15s, background .15s;
+  }
+  .topbar nav a:hover{color:var(--accent);background:var(--soft);}
+  .topbar nav a.active{color:var(--accent);}
 
-  main{max-width:720px;margin:0 auto;padding:28px 16px 40px;}
+  main{max-width:760px;margin:0 auto;padding:36px 18px 64px;}
+
+  /* ---------- page switch ---------- */
+  .page{display:none;}
+  .page.active{display:block;animation:fadeIn .28s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  /* ---------- cards ---------- */
   .card{
     background:var(--card);
-    border-radius:10px;
-    box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
-    padding:28px 24px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:34px 30px 30px;
   }
-  h1{font-size:26px;font-weight:800;letter-spacing:-.4px;text-align:center;}
-  .sub{text-align:center;color:var(--muted);font-size:14px;margin-top:6px;margin-bottom:24px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:10px;
+  }
+  .eyebrow::before{content:"";width:14px;height:2px;background:var(--accent);border-radius:2px;}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.6px;line-height:1.15;}
+  .sub{color:var(--muted);font-size:14.5px;margin-top:6px;}
 
-  /* form grid */
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-  .field label{display:block;font-size:12.5px;font-weight:600;color:#333;margin-bottom:5px;text-transform:capitalize;}
+  .calc-head{margin-bottom:26px;}
+
+  /* ---------- form grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 14px;}
+  .field label{
+    display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    margin-bottom:6px;
+  }
   .field input{
     width:100%;
-    padding:9px 11px;
+    padding:10px 12px;
     border:1px solid var(--line);
-    border-radius:6px;
+    border-radius:9px;
     font-size:14px;
     color:var(--ink);
     background:#fff;
     outline:none;
-    transition:border-color .15s, box-shadow .15s;
+    transition:border-color .16s, box-shadow .16s;
+    -moz-appearance:textfield;
+    appearance:textfield;
   }
-  .field input::placeholder{color:#aaa;}
-  .field input:focus{border-color:#000;box-shadow:0 0 0 2px rgba(0,0,0,.08);}
+  .field input::-webkit-outer-spin-button,.field input::-webkit-inner-spin-button{-webkit-appearance:none;}
+  .field input::placeholder{color:#aeb4bd;}
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring);}
+  .field input:hover:not(:focus){border-color:#cdd3da;}
 
+  /* ---------- buttons ---------- */
   .btn{
-    display:block;width:100%;
-    margin-top:22px;
-    background:#000;color:#fff;
-    border:none;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;
+    margin-top:26px;
+    background:var(--accent);color:#fff;
+    border:none;border-radius:10px;
     padding:13px 16px;
-    font-size:15px;font-weight:700;letter-spacing:.3px;
+    font-size:15px;font-weight:700;letter-spacing:.2px;
     cursor:pointer;
-    transition:transform .1s, box-shadow .15s, background .15s;
+    transition:background .16s, transform .06s, box-shadow .16s, opacity .16s;
   }
-  .btn:hover{background:#1a1a1a;box-shadow:0 4px 14px rgba(0,0,0,.25);}
+  .btn:hover{background:var(--accent-hover);box-shadow:0 6px 18px -4px rgba(11,12,16,.35);}
   .btn:active{transform:translateY(1px);}
-  .btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none;transform:none;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none;}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--line);margin-top:0;}
+  .btn.ghost:hover{background:var(--soft);box-shadow:none;}
 
-  /* result */
+  /* ---------- result ---------- */
   .result{
-    margin-top:20px;
+    margin-top:24px;
     background:var(--soft);
-    border-radius:8px;
-    padding:18px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
     text-align:center;
+    position:relative;
+    overflow:hidden;
   }
-  .result .lbl{font-size:12.5px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.8px;}
-  .result .value{font-size:38px;font-weight:800;letter-spacing:-1px;margin-top:4px;}
-  .result .hint{font-size:13px;color:var(--muted);margin-top:6px;}
-  .result .go{margin-top:12px;}
+  .result::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,var(--accent),transparent);
+    opacity:.5;
+  }
+  .result .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;}
+  .result .value{
+    font-size:40px;font-weight:800;letter-spacing:-1.2px;margin-top:4px;
+    font-variant-numeric:tabular-nums;
+  }
+  .result .hint{font-size:13px;color:var(--muted);margin-top:4px;}
+  .result .go{margin-top:16px;}
   .result .go .btn{margin-top:0;padding:10px 14px;font-size:13.5px;}
 
-  /* breakdown page */
-  .bd-title{font-size:24px;font-weight:800;letter-spacing:-.4px;text-align:center;}
-  .bd-sub{text-align:center;color:var(--muted);font-size:14px;margin-top:6px;margin-bottom:22px;}
+  /* ---------- breakdown ---------- */
+  .bd-title{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+  .bd-sub{color:var(--muted);font-size:14.5px;margin-top:6px;margin-bottom:24px;}
   .bd-total{
-    background:#000;color:#fff;
-    border-radius:8px;
-    padding:16px 18px;
-    display:flex;align-items:center;justify-content:space-between;
-    margin-bottom:18px;
+    background:var(--accent);color:#fff;
+    border-radius:12px;
+    padding:18px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-bottom:8px;
   }
-  .bd-total .t1{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:.7;}
-  .bd-total .t2{font-size:26px;font-weight:800;}
-  .items{list-style:none;}
+  .bd-total .t1{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;opacity:.65;}
+  .bd-total .t2{font-size:28px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+  .items{list-style:none;margin-top:10px;}
   .items li{
     display:flex;align-items:center;gap:14px;
-    padding:13px 4px;
+    padding:14px 6px;
     border-bottom:1px solid var(--line);
   }
   .items li:last-child{border-bottom:none;}
   .num{
     flex:0 0 auto;
     width:28px;height:28px;
-    border-radius:7px;
-    background:#000;color:#fff;
-    font-size:12px;font-weight:700;
+    border-radius:8px;
+    background:var(--soft);color:var(--accent);
+    border:1px solid var(--line);
+    font-size:12px;font-weight:800;
     display:flex;align-items:center;justify-content:center;
   }
-  .items .txt{font-size:14.5px;font-weight:500;}
-  .items .qty{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap;}
+  .items .txt{font-size:14.5px;font-weight:550;color:var(--ink);}
+  .items .qty{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap;font-weight:600;}
   .tip{
-    margin-top:18px;
-    background:var(--tip);
-    border-left:4px solid #f0c040;
-    border-radius:8px;
-    padding:14px 16px;
+    margin-top:20px;
+    background:var(--tip-bg);
+    border:1px solid #f2ddb0;
+    border-radius:12px;
+    padding:16px 18px;
   }
-  .tip .h{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#8a6d00;margin-bottom:4px;}
-  .tip p{font-size:14px;color:#333;}
-
-  .actions{display:flex;gap:12px;margin-top:22px;}
+  .tip .h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9a7310;margin-bottom:6px;}
+  .tip p{font-size:14px;color:#4a3b14;line-height:1.6;}
+  .actions{display:flex;gap:12px;margin-top:24px;}
   .actions .btn{flex:1;margin-top:0;}
-  .actions .btn.ghost{background:#fff;color:#000;border:1px solid #000;}
-  .actions .btn.ghost:hover{background:#f5f5f5;box-shadow:none;}
 
-  /* contact */
-  #contact{scroll-margin-top:76px;}
-  .contact-box{
-    background:var(--card);
-    border-radius:10px;
-    box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
-    padding:26px 24px;
-  }
-  .contact-box h2{font-size:20px;font-weight:800;margin-bottom:8px;}
-  .contact-box p{color:var(--muted);font-size:14px;margin-bottom:16px;}
+  /* ---------- contact ---------- */
+  .contact-box{padding:10px 0;}
+  .contact-box h2{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+  .contact-box p{color:var(--muted);font-size:14.5px;margin:8px 0 22px;}
   .contact-box a.row{
-    display:flex;align-items:center;gap:10px;
-    padding:12px 14px;
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
     border:1px solid var(--line);
-    border-radius:8px;
-    font-weight:600;font-size:14px;
-    margin-bottom:10px;
-    transition:border-color .15s, background .15s;
+    border-radius:11px;
+    font-weight:600;font-size:14.5px;color:var(--ink);
+    margin-bottom:12px;
+    transition:border-color .16s, background .16s, transform .1s;
   }
-  .contact-box a.row:hover{border-color:#000;background:#fafafa;}
+  .contact-box a.row:hover{border-color:var(--accent);background:#fff;transform:translateX(3px);}
+  .contact-box a.row svg{width:18px;height:18px;flex:0 0 auto;color:var(--accent);}
 
-  @media (max-width:640px){
+  /* ---------- responsive ---------- */
+  @media (max-width:700px){
     .grid{grid-template-columns:repeat(2,1fr);}
-    .card{padding:22px 18px;}
+    .card{padding:26px 20px 24px;}
+    h1{font-size:25px;}
+    .result .value{font-size:34px;}
+    .bd-total{flex-direction:column;align-items:flex-start;gap:4px;}
   }
   @media (max-width:400px){
     .grid{grid-template-columns:1fr;}
   }
-
-  /* shared page switch */
-  .page{display:none;}
-  .page.active{display:block;}
 </style>
 </head>
 <body>
 
-<header>
-  <a class="brand" href="#/">dahej calculator</a>
-  <nav>
-    <a href="#/contact">Contact</a>
-  </nav>
-</header>
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="mark" aria-hidden="true">₹</span>
+    <nav>
+      <a href="#/contact">Contact</a>
+    </nav>
+  </div>
+</div>
 
 <main>
 
   <!-- ============ CALCULATOR PAGE ============ -->
   <section id="page-calc" class="page active">
     <div class="card">
-      <h1>Dahej Calculator</h1>
-      <p class="sub">Calculate your dahej value</p>
+      <div class="calc-head">
+        <span class="eyebrow">Calculator</span>
+        <h1>Dahej Calculator</h1>
+        <p class="sub">Calculate your dahej value</p>
+      </div>
 
       <form id="calc-form" autocomplete="off">
         <div class="grid">
@@ -251,87 +311,97 @@
 
   <!-- ============ CONTACT PAGE ============ -->
   <section id="page-contact" class="page">
-    <div class="contact-box">
+    <div class="card contact-box">
       <h2>Contact</h2>
       <p>Have feedback, a joke, or want the dahej increased? Reach out.</p>
-      <a class="row" href="mailto:sahil@example.com">✉️ &nbsp;sahil@example.com</a>
-      <a class="row" href="https://twitter.com" target="_blank" rel="noopener">🐦 &nbsp;Twitter / X</a>
-      <a class="row" href="https://instagram.com" target="_blank" rel="noopener">📷 &nbsp;Instagram</a>
+      <a class="row" href="mailto:sahil@example.com">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        <span>sahil@example.com</span>
+      </a>
+      <a class="row" href="https://twitter.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+        <span>Twitter / X</span>
+      </a>
+      <a class="row" href="https://instagram.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        <span>Instagram</span>
+      </a>
     </div>
   </section>
 
 </main>
 
 <script>
-(function(){
+(function () {
   "use strict";
-  var route = window.location.hash || "#/";
+
+  var DEFAULT_ROUTE = "#/";
 
   /* ---------- tiny hash router ---------- */
-  var PAGES = ["calc","breakdown","contact"];
-  function show(name){
-    PAGES.forEach(function(p){
-      document.getElementById("page-"+p).classList.toggle("active", p===name);
-    });
-    document.querySelectorAll("nav a").forEach(function(a){
-      a.classList.toggle("active", a.getAttribute("href") === "#/contact" && name==="contact");
-    });
-    if(name==="breakdown") renderBreakdown();
-    window.scrollTo(0,0);
-  }
-  function routeTo(){
-    var h = window.location.hash || "#/";
-    if(h.indexOf("#/breakdown")===0 && lastValue) show("breakdown");
-    else if(h.indexOf("#/contact")===0) show("contact");
-    else { window.location.hash = "#/"; show("calc"); }
-  }
-  window.addEventListener("hashchange", routeTo);
+  var PAGES = ["calc", "breakdown", "contact"];
 
-  /* ---------- calculation ---------- */
+  function show(name) {
+    PAGES.forEach(function (p) {
+      document.getElementById("page-" + p).classList.toggle("active", p === name);
+    });
+    document.querySelectorAll(".topbar nav a").forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("href") === "#/contact" && name === "contact");
+    });
+    if (name === "breakdown") renderBreakdown();
+    window.scrollTo(0, 0);
+  }
+
+  function route() {
+    var h = window.location.hash || DEFAULT_ROUTE;
+    if (h.indexOf("#/breakdown") === 0 && lastValue > 0) show("breakdown");
+    else if (h.indexOf("#/contact") === 0) show("contact");
+    else { window.location.hash = DEFAULT_ROUTE; show("calc"); }
+  }
+
+  window.addEventListener("hashchange", route);
+
+  /* ---------- state ---------- */
   var lastValue = 0;
   var lastInputs = {};
 
-  function num(el){ var v = parseFloat(el.value); return isNaN(v) || v<0 ? 0 : v; }
+  var KEYS = ["bodycout", "depthPuh", "widthPuh", "ipill", "unsafe", "talking",
+              "situationships", "exbf", "relationships", "age", "oyo", "gooning"];
 
-  function readInputs(){
-    var o = {};
-    document.querySelectorAll("#calc-form input").forEach(function(el){
-      o[el.dataset.key] = num(el);
+  function readInputs() {
+    var out = {};
+    KEYS.forEach(function (k) {
+      var el = document.querySelector('[data-key="' + k + '"]');
+      var v = parseFloat(el && el.value);
+      out[k] = isFinite(v) && v > 0 ? v : 0;
     });
-    return o;
+    return out;
   }
 
-  function calculate(){
-    var d = readInputs();
-    lastInputs = d;
-    var score =
-      d.bodycout * 3 +
-      d.depthPuh * 2.5 +
-      d.widthPuh * 2.5 +
-      d.ipill * 2 +
-      d.unsafe * 4 +
-      d.talking * 1.5 +
-      d.situationships * 3 +
-      d.exbf * 5 +
-      d.relationships * 4 +
-      d.oyo * 1.2 +
-      d.gooning * 1.5 +
-      (d.age > 0 ? Math.max(0, d.age - 22) * 1.4 : 0);
+  /* weight table — kept small and legible for future tuning */
+  var W = {
+    bodycout: 3, depthPuh: 2.5, widthPuh: 2.5, ipill: 2, unsafe: 4,
+    talking: 1.5, situationships: 3, exbf: 5, relationships: 4,
+    oyo: 1.2, gooning: 1.5
+  };
+  var BASE = 150000;   // meme floor: everyone gets at least a scooty
+  var PER_POINT = 18500;
+  var MIN_TOTAL = 50000;
 
-    // meme floor — everyone gets at least a scooter
-    var base = 150000;
-    var total = Math.round(base + score * 18500);
-    return Math.max(50000, total);
+  function calculate(d) {
+    var score = 0, k;
+    for (k in W) if (Object.prototype.hasOwnProperty.call(W, k)) score += d[k] * W[k];
+    if (d.age > 0) score += Math.max(0, d.age - 22) * 1.4;
+    return Math.max(MIN_TOTAL, Math.round(BASE + score * PER_POINT));
   }
 
   /* ---------- formatting ---------- */
-  function inr(n){
+  function inr(n) {
     return "₹" + Math.round(n).toLocaleString("en-IN");
   }
-  function worth(n){
-    if(n >= 1e7) return (n/1e7).toFixed(n%1e7===0?0:2) + " Crore";
-    if(n >= 1e5) return (n/1e5).toFixed(n%1e5===0?0:1) + " Lakh";
-    if(n >= 1e3) return (n/1e3).toFixed(0) + " Thousand";
+  function worth(n) {
+    if (n >= 1e7) return (n / 1e7).toFixed(n % 1e7 === 0 ? 0 : 2) + " Crore";
+    if (n >= 1e5) return (n / 1e5).toFixed(n % 1e5 === 0 ? 0 : 1) + " Lakh";
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + " Thousand";
     return String(n);
   }
 
@@ -346,74 +416,73 @@
     "A penthouse"
   ];
 
-  function dynamicItems(d){
+  function dynamicItems(d) {
     var list = [];
-    if(d.relationships > 0) list.push(["Emotional damage compensation", worth(2000000 * Math.max(1,d.relationships))]);
-    if(d.exbf > 0) list.push(["Ex-bf therapy sessions", String(Math.round(d.exbf * 40)) + " sessions"]);
-    if(d.situationships > 0) list.push(["Situationship closure kit", String(Math.round(d.situationships * 3)) + " boxes"]);
-    if(d.talking > 0) list.push(["Talking stage data recovery", String(Math.round(d.talking * 2)) + " GB"]);
-    if(d.ipill > 0) list.push(["i-pill stockpile (supply chain)", String(Math.round(d.ipill)) + " strips"]);
-    if(d.unsafe > 0) list.push(["Unprotected incident handling fee", worth(300000 * d.unsafe)]);
-    if(d.oyo > 0) list.push(["Oyo loyalty premium", worth(15000 * d.oyo)]);
-    if(d.gooning > 0) list.push(["Celebrity gooning restraint order", String(Math.round(d.gooning)) + " restraining orders"]);
-    if(d.bodycout > 0) list.push(["Bodycount couture tax", worth(250000 * d.bodycout)]);
-    if(d.depthPuh > 0) list.push(["Depth adjustment surcharge", worth(400000 * d.depthPuh)]);
-    if(d.widthPuh > 0) list.push(["Width calibration fee", worth(400000 * d.widthPuh)]);
-    if(d.age > 0 && d.age > 25) list.push(["Age-adjustment blessing fund", worth(500000 * Math.max(1, d.age - 25))]);
-    if(!list.length) list.push(["Starter kit (scooty + laddoo box)", "1 unit"]);
+    if (d.relationships > 0) list.push(["Emotional damage compensation", worth(2000000 * Math.max(1, d.relationships))]);
+    if (d.exbf > 0) list.push(["Ex-bf therapy sessions", String(Math.round(d.exbf * 40)) + " sessions"]);
+    if (d.situationships > 0) list.push(["Situationship closure kit", String(Math.round(d.situationships * 3)) + " boxes"]);
+    if (d.talking > 0) list.push(["Talking stage data recovery", String(Math.round(d.talking * 2)) + " GB"]);
+    if (d.ipill > 0) list.push(["i-pill stockpile (supply chain)", String(Math.round(d.ipill)) + " strips"]);
+    if (d.unsafe > 0) list.push(["Unprotected incident handling fee", worth(300000 * d.unsafe)]);
+    if (d.oyo > 0) list.push(["Oyo loyalty premium", worth(15000 * d.oyo)]);
+    if (d.gooning > 0) list.push(["Celebrity gooning restraint order", String(Math.round(d.gooning)) + " restraining orders"]);
+    if (d.bodycout > 0) list.push(["Bodycount couture tax", worth(250000 * d.bodycout)]);
+    if (d.depthPuh > 0) list.push(["Depth adjustment surcharge", worth(400000 * d.depthPuh)]);
+    if (d.widthPuh > 0) list.push(["Width calibration fee", worth(400000 * d.widthPuh)]);
+    if (d.age > 25) list.push(["Age-adjustment blessing fund", worth(500000 * Math.max(1, d.age - 25))]);
+    if (!list.length) list.push(["Starter kit (scooty + laddoo box)", "1 unit"]);
     return list;
   }
 
-  function renderBreakdown(){
+  function renderBreakdown() {
     var d = lastInputs;
-    var total = lastValue;
     var ul = document.getElementById("bd-list");
     var html = "";
-    FIXED.forEach(function(t,i){
-      html += '<li><span class="num">'+(i+1)+'</span><span class="txt">'+t+'</span></li>';
+    FIXED.forEach(function (t, i) {
+      html += '<li><span class="num">' + (i + 1) + '</span><span class="txt">' + t + '</span></li>';
     });
-    dynamicItems(d).forEach(function(it){
-      html += '<li><span class="num">+</span><span class="txt">'+it[0]+'</span><span class="qty">'+it[1]+'</span></li>';
+    dynamicItems(d).forEach(function (it) {
+      html += '<li><span class="num">+</span><span class="txt">' + it[0] + '</span><span class="qty">' + it[1] + '</span></li>';
     });
     ul.innerHTML = html;
-    document.getElementById("bd-amount").textContent = inr(total);
+    document.getElementById("bd-amount").textContent = inr(lastValue);
   }
 
-  /* ---------- wire up ---------- */
-  document.getElementById("calc-form").addEventListener("submit", function(e){
+  /* ---------- wiring ---------- */
+  document.getElementById("calc-form").addEventListener("submit", function (e) {
     e.preventDefault();
-    lastValue = calculate();
+    lastInputs = readInputs();
+    lastValue = calculate(lastInputs);
     var v = document.getElementById("calc-value");
     v.textContent = inr(lastValue);
-    v.style.animation = "none"; void v.offsetWidth; v.style.animation = "";
     document.getElementById("go-breakdown").disabled = false;
     window.location.hash = "#/breakdown";
   });
 
-  document.getElementById("go-breakdown").addEventListener("click", function(){
+  document.getElementById("go-breakdown").addEventListener("click", function () {
     window.location.hash = "#/breakdown";
   });
 
-  document.getElementById("recalc").addEventListener("click", function(){
-    window.location.hash = "#/";
+  document.getElementById("recalc").addEventListener("click", function () {
+    window.location.hash = DEFAULT_ROUTE;
   });
 
-  document.getElementById("share").addEventListener("click", function(){
+  document.getElementById("share").addEventListener("click", function () {
     var txt = "My estimated dahej value is " + inr(lastValue) + " — calculate yours!";
-    if(navigator.share){
-      navigator.share({ title:"Dahej Calculator", text:txt, url:location.href }).catch(function(){});
+    if (navigator.share) {
+      navigator.share({ title: "Dahej Calculator", text: txt, url: location.href }).catch(function () {});
     } else {
       var ta = document.createElement("textarea");
       ta.value = txt;
       document.body.appendChild(ta);
       ta.select();
-      try{ document.execCommand("copy"); alert("Result copied! Paste it anywhere."); }
-      catch(err){ prompt("Copy your result:", txt); }
+      try { document.execCommand("copy"); alert("Result copied! Paste it anywhere."); }
+      catch (err) { prompt("Copy your result:", txt); }
       document.body.removeChild(ta);
     }
   });
 
-  routeTo();
+  route();
 })();
 </script>
 </body>
