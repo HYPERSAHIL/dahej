@@ -30,6 +30,7 @@ export async function onRequestPost(context) {
 
     let id = "";
     let attempts = 0;
+    let existing = null;
     const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const crypto = globalThis.crypto;
     do {
@@ -41,7 +42,7 @@ export async function onRequestPost(context) {
         id += ALPHABET[n % 62];
         n = Math.floor(n / 62);
       }
-      const existing = await kv.get("share:" + id);
+      existing = await kv.get("share:" + id);
       attempts++;
       if (attempts > 10) return new Response(JSON.stringify({ error: "could not allocate id" }), {
         status: 500, headers: { "content-type": "application/json" },
