@@ -577,10 +577,9 @@
     route();
   }
 
-  /* ---------- autoplay audio ---------- */
+  /* ---------- autoplay audio (once) ---------- */
   (function () {
     var audio = new Audio("naughty-hora.mp3");
-    audio.loop = true;
     var started = false;
     var start = function () {
       if (started) return;
@@ -589,10 +588,6 @@
     };
     ["pointerdown", "keydown", "touchstart", "scroll"].forEach(function (ev) {
       window.addEventListener(ev, start, { once: false, passive: true });
-    });
-    document.addEventListener("visibilitychange", function () {
-      if (!document.hidden && started) audio.play().catch(function () {});
-      if (document.hidden) audio.pause();
     });
   })();
 })();
