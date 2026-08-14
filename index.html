@@ -188,6 +188,25 @@
   .tip p{font-size:14px;color:#4a3b14;line-height:1.6;}
   .actions{display:flex;gap:12px;margin-top:24px;}
   .actions .btn{flex:1;margin-top:0;}
+  .bd-community{
+    margin-top:8px;
+    border:1.5px dashed var(--accent);
+    border-radius:12px;
+    background:var(--soft);
+    padding:26px 18px;
+    text-align:center;
+  }
+  .bd-community-main{
+    font-size:22px;font-weight:800;letter-spacing:-.4px;
+    text-transform:uppercase;
+  }
+  .share-hint{
+    margin-top:12px;
+    text-align:center;
+    font-size:12.5px;font-weight:600;color:#1a7a3a;
+    opacity:0;transition:opacity .2s;
+  }
+  .share-hint.show{opacity:1;}
 
   /* ---------- contact ---------- */
   .contact-box{padding:10px 0;}
@@ -243,7 +262,7 @@
           <div class="field"><label>Bodycout</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="bodycout"></div>
           <div class="field"><label>Depth of puh/Length of dih</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="depthPuh"></div>
           <div class="field"><label>Width of puh/Girth of dih</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="widthPuh"></div>
-          <div class="field"><label>i pill consumed till now (Fill only if Female)</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="ipill"></div>
+          <div class="field"><label>i pill consumed till now (Fill only if Female — Optional)</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="ipill"></div>
           <div class="field"><label>Unprotected sex count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="unsafe"></div>
           <div class="field"><label>Talking stage count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="talking"></div>
           <div class="field"><label>Situationships count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="situationships"></div>
@@ -272,9 +291,13 @@
       <h2 class="bd-title">Dahej Break-down</h2>
       <p class="bd-sub">Here is the detailed break-down of your estimated dahej.</p>
 
-      <div class="bd-total">
+      <div class="bd-total" id="bd-total">
         <span class="t1">Estimated Dahej</span>
         <span class="t2" id="bd-amount">₹0</span>
+      </div>
+
+      <div class="bd-community" id="bd-community" hidden>
+        <p class="bd-community-main">You deserve a community puh</p>
       </div>
 
       <ul class="items" id="bd-list"></ul>
@@ -288,6 +311,7 @@
         <button class="btn ghost" id="recalc">← Recalculate</button>
         <button class="btn" id="share">Share Result</button>
       </div>
+      <p class="share-hint" id="share-hint">Share link copied!</p>
     </div>
   </section>
 
@@ -335,7 +359,7 @@
 
   function route() {
     var h = window.location.hash || DEFAULT_ROUTE;
-    if (h.indexOf("#/breakdown") === 0 && lastValue > 0) show("breakdown");
+    if (h.indexOf("#/breakdown") === 0 && lastCalculated) show("breakdown");
     else if (h.indexOf("#/contact") === 0) show("contact");
     else { window.location.hash = DEFAULT_ROUTE; show("calc"); }
   }
@@ -345,6 +369,7 @@
   /* ---------- state ---------- */
   var lastValue = 0;
   var lastInputs = {};
+  var lastCalculated = false;
 
   var KEYS = ["bodycout", "depthPuh", "widthPuh", "ipill", "unsafe", "talking",
               "situationships", "exbf", "relationships", "age", "oyo", "gooning"];
@@ -357,6 +382,20 @@
       out[k] = isFinite(v) && v > 0 ? v : 0;
     });
     return out;
+  }
+
+  function fillInputs(d) {
+    KEYS.forEach(function (k) {
+      var el = document.querySelector('[data-key="' + k + '"]');
+      if (el) el.value = d[k] ? String(d[k]) : "";
+    });
+  }
+
+  /* ---------- community puh detection ---------- */
+  function isCommunityPuh(d) {
+    return d.bodycout === 0 && d.unsafe === 0 && d.talking === 0 &&
+           d.situationships === 0 && d.exbf === 0 && d.relationships === 0 &&
+           d.oyo === 0 && d.gooning === 0;
   }
 
   /* weight table — kept small and legible for future tuning */
@@ -418,7 +457,23 @@
 
   function renderBreakdown() {
     var d = lastInputs;
+    var community = isCommunityPuh(d);
     var ul = document.getElementById("bd-list");
+    var totalBox = document.getElementById("bd-total");
+    var communityBox = document.getElementById("bd-community");
+    var tip = document.getElementById("bd-tip");
+
+    if (community) {
+      totalBox.hidden = true;
+      communityBox.hidden = false;
+      ul.innerHTML = "";
+      tip.textContent = "pair utne felao jitni badi chadar ho (it wasnt about pair and chadar)";
+      return;
+    }
+    totalBox.hidden = false;
+    communityBox.hidden = true;
+    tip.textContent = "chyut unti hi fatwao jitna baap ki gand me dahej dene ka dam ho";
+
     var html = "";
     FIXED.forEach(function (t, i) {
       html += '<li><span class="num">' + (i + 1) + '</span><span class="txt">' + t + '</span></li>';
@@ -435,8 +490,9 @@
     e.preventDefault();
     lastInputs = readInputs();
     lastValue = calculate(lastInputs);
+    lastCalculated = true;
     var v = document.getElementById("calc-value");
-    v.textContent = inr(lastValue);
+    v.textContent = isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue);
     document.getElementById("go-breakdown").disabled = false;
     window.location.hash = "#/breakdown";
   });
@@ -449,22 +505,64 @@
     window.location.hash = DEFAULT_ROUTE;
   });
 
-  document.getElementById("share").addEventListener("click", function () {
-    var txt = "My estimated dahej value is " + inr(lastValue) + " — calculate yours!";
-    if (navigator.share) {
-      navigator.share({ title: "Dahej Calculator", text: txt, url: location.href }).catch(function () {});
+  function showHint() {
+    var el = document.getElementById("share-hint");
+    el.classList.add("show");
+    setTimeout(function () { el.classList.remove("show"); }, 2500);
+  }
+
+  function copyText(txt) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(showHint, function () { prompt("Copy your share link:", txt); });
     } else {
       var ta = document.createElement("textarea");
       ta.value = txt;
       document.body.appendChild(ta);
       ta.select();
-      try { document.execCommand("copy"); alert("Result copied! Paste it anywhere."); }
-      catch (err) { prompt("Copy your result:", txt); }
+      try { document.execCommand("copy"); showHint(); }
+      catch (err) { prompt("Copy your share link:", txt); }
       document.body.removeChild(ta);
     }
+  }
+
+  document.getElementById("share").addEventListener("click", function () {
+    fetch("/api/save", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ inputs: lastInputs })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data || !data.id) throw new Error("no id");
+        var link = location.origin + "/urand/" + data.id;
+        history.replaceState(null, "", "/urand/" + data.id);
+        if (navigator.share) {
+          navigator.share({
+            title: "My Dahej Value",
+            text: "My estimated dahej value is " + (isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue)) + " — calculate yours!",
+            url: link
+          }).catch(function () { copyText(link); });
+        } else {
+          copyText(link);
+        }
+      })
+      .catch(function () { copyText(location.href); });
   });
 
-  route();
+  /* ---------- share-link loading (served by /urand/:id) ---------- */
+  if (window.__SHARE_INPUTS__) {
+    fillInputs(window.__SHARE_INPUTS__);
+    lastInputs = readInputs();
+    lastValue = calculate(lastInputs);
+    lastCalculated = true;
+    var v = document.getElementById("calc-value");
+    v.textContent = isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue);
+    document.getElementById("go-breakdown").disabled = false;
+    history.replaceState(null, "", "/urand/" + window.__SHARE_ID__);
+    show("breakdown");
+  } else {
+    route();
+  }
 })();
 </script>
 </body>
