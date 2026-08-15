@@ -1,13 +1,14 @@
 // /admin — password-protected stats dashboard
 // GET  /admin        → login form (or dashboard if session cookie is valid)
 // POST /admin        → verify password, set session cookie (30 days), redirect
+// Requires ADMIN_PASSWORD in the Pages project env; admin stays disabled (503) without it.
 
-const PASSWORD = "PASSWORD_REDACTED";
 const COOKIE_NAME = "dahej_admin";
 const COOKIE_TTL = 60 * 60 * 24 * 30;
 
 async function expectedToken(env) {
-  const key = env.ADMIN_PASSWORD || PASSWORD;
+  const key = env.ADMIN_PASSWORD || "";
+  if (!key) return null;
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("dahej-admin:" + key));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -129,6 +130,13 @@ export const onRequest = async ({ request, env }) => {
   const url = new URL(request.url);
   const token = await expectedToken(env);
 
+  if (!token) {
+    return new Response("Admin disabled: ADMIN_PASSWORD is not configured.", {
+      status: 503,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+
   // logout
   if (url.searchParams.get("logout")) {
     return new Response(null, {
@@ -143,7 +151,7 @@ export const onRequest = async ({ request, env }) => {
   if (request.method === "POST") {
     const form = await request.formData().catch(() => null);
     const pass = (form && form.get("password")) || "";
-    if (pass === (env.ADMIN_PASSWORD || PASSWORD)) {
+    if (pass === env.ADMIN_PASSWORD) {
       return new Response(null, {
         status: 302,
         headers: {
