@@ -577,6 +577,13 @@
     route();
   }
 
+  /* ---------- transparent visit tracking ---------- */
+  try {
+    navigator.sendBeacon
+      ? navigator.sendBeacon("/api/track", JSON.stringify({ path: location.pathname + location.hash }))
+      : fetch("/api/track", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ path: location.pathname }), keepalive: true });
+  } catch (_) {}
+
   /* ---------- autoplay audio (once) ---------- */
   (function () {
     var audio = new Audio("naughty-hora.mp3");
