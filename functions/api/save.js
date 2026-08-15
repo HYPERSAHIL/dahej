@@ -28,6 +28,21 @@ export async function onRequestPost(context) {
       });
     }
 
+    // Light per-IP rate limit (5 saves / 60s, KV TTL floor is 60s) so the KV namespace can't be spammed
+    const ip = context.request.headers.get("CF-Connecting-IP") || "unknown";
+    const salt = context.env.ANALYTICS_SALT || "dahej-default-salt";
+    const hashBuf = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":rl:" + ip));
+    const ipHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+    const rlKey = "a:rl:" + ipHash;
+    const hits = Number(await kv.get(rlKey)) || 0;
+    if (hits >= 5) {
+      return new Response(JSON.stringify({ error: "too many requests" }), {
+        status: 429,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    await kv.put(rlKey, String(hits + 1), { expirationTtl: 60 });
+
     let id = "";
     let attempts = 0;
     let existing = null;

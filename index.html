@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dahej Calculator — Calculate your dahej value</title>
 <meta name="description" content="Calculate your estimated dahej value instantly.">
-<meta name="theme-color" content="#0b0c10">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dahej Calculator">
+<meta property="og:title" content="Dahej Calculator — what's your dahej value?">
+<meta property="og:description" content="Calculate your estimated dahej value in seconds.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23fff' font-family='Arial'%3E₹%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -15,20 +21,63 @@
     --ink-soft:#3c4048;
     --muted:#7a818c;
     --line:#e6e9ee;
+    --line-hover:#cdd3da;
     --soft:#f1f3f6;
     --accent:#0b0c10;
     --accent-hover:#23262e;
+    --on-accent:#ffffff;
     --ring:rgba(11,12,16,.12);
+    --glow:rgba(11,12,16,.045);
+    --topbar-bg:rgba(255,255,255,.82);
+    --field-bg:#ffffff;
+    --placeholder:#aeb4bd;
     --tip-bg:#fff8e6;
     --tip-line:#f0c14b;
+    --tip-head:#9a7310;
+    --tip-text:#4a3b14;
+    --insta-bg:linear-gradient(135deg,#e8f0fe,#f3f7ff);
+    --insta-line:#c9dbf8;
+    --insta-q:#1a4fa0;
+    --insta-a:#3c5a8f;
+    --share-ok:#1a7a3a;
     --radius:14px;
     --shadow:0 1px 2px rgba(16,20,28,.04),0 12px 32px -8px rgba(16,20,28,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0b0c10;
+      --card:#14161c;
+      --ink:#edeff3;
+      --ink-soft:#c6cbd3;
+      --muted:#8d949f;
+      --line:#262b34;
+      --line-hover:#3a414d;
+      --soft:#1c2027;
+      --accent:#f4f6f9;
+      --accent-hover:#ffffff;
+      --on-accent:#0b0c10;
+      --ring:rgba(244,246,249,.15);
+      --glow:rgba(255,255,255,.035);
+      --topbar-bg:rgba(15,17,21,.8);
+      --field-bg:#0e1015;
+      --placeholder:#5a6270;
+      --tip-bg:#26200f;
+      --tip-line:#4d3f1a;
+      --tip-head:#e3b74a;
+      --tip-text:#e8dcb0;
+      --insta-bg:linear-gradient(135deg,#152238,#182742);
+      --insta-line:#2c4269;
+      --insta-q:#a8c4f0;
+      --insta-a:#8fa8d0;
+      --share-ok:#4ecb7a;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -8px rgba(0,0,0,.5);
+    }
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
     background:
-      radial-gradient(900px 340px at 85% -10%, rgba(11,12,16,.045), transparent 60%),
+      radial-gradient(900px 340px at 85% -10%, var(--glow), transparent 60%),
       var(--bg);
     color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -43,7 +92,7 @@
   .topbar{
     position:sticky;top:0;z-index:20;
     backdrop-filter:blur(10px);
-    background:rgba(255,255,255,.82);
+    background:var(--topbar-bg);
     border-bottom:1px solid var(--line);
   }
   .topbar-inner{
@@ -93,23 +142,23 @@
     border-radius:9px;
     font-size:14px;
     color:var(--ink);
-    background:#fff;
+    background:var(--field-bg);
     outline:none;
     transition:border-color .16s, box-shadow .16s;
     -moz-appearance:textfield;
     appearance:textfield;
   }
   .field input::-webkit-outer-spin-button,.field input::-webkit-inner-spin-button{-webkit-appearance:none;}
-  .field input::placeholder{color:#aeb4bd;}
+  .field input::placeholder{color:var(--placeholder);}
   .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring);}
-  .field input:hover:not(:focus){border-color:#cdd3da;}
+  .field input:hover:not(:focus){border-color:var(--line-hover);}
 
   /* ---------- buttons ---------- */
   .btn{
     display:flex;align-items:center;justify-content:center;gap:8px;
     width:100%;
     margin-top:26px;
-    background:var(--accent);color:#fff;
+    background:var(--accent);color:var(--on-accent);
     border:none;border-radius:10px;
     padding:13px 16px;
     font-size:15px;font-weight:700;letter-spacing:.2px;
@@ -119,7 +168,7 @@
   .btn:hover{background:var(--accent-hover);box-shadow:0 6px 18px -4px rgba(11,12,16,.35);}
   .btn:active{transform:translateY(1px);}
   .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none;}
-  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--line);margin-top:0;}
+  .btn.ghost{background:var(--card);color:var(--accent);border:1px solid var(--line);margin-top:0;}
   .btn.ghost:hover{background:var(--soft);box-shadow:none;}
 
   /* ---------- result ---------- */
@@ -138,6 +187,8 @@
     background:linear-gradient(90deg,var(--accent),transparent);
     opacity:.5;
   }
+  .result.reveal{animation:pop .45s cubic-bezier(.2,.9,.3,1.25);}
+  @keyframes pop{from{opacity:.4;transform:scale(.975);}to{opacity:1;transform:none;}}
   .result .lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;}
   .result .value{
     font-size:40px;font-weight:800;letter-spacing:-1.2px;margin-top:4px;
@@ -151,7 +202,7 @@
   .bd-title{font-size:26px;font-weight:800;letter-spacing:-.5px;}
   .bd-sub{color:var(--muted);font-size:14.5px;margin-top:6px;margin-bottom:24px;}
   .bd-total{
-    background:var(--accent);color:#fff;
+    background:var(--accent);color:var(--on-accent);
     border-radius:12px;
     padding:18px 22px;
     display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -164,7 +215,9 @@
     display:flex;align-items:center;gap:14px;
     padding:14px 6px;
     border-bottom:1px solid var(--line);
+    animation:slideUp .38s cubic-bezier(.2,.7,.3,1) both;
   }
+  @keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
   .items li:last-child{border-bottom:none;}
   .num{
     flex:0 0 auto;
@@ -180,12 +233,12 @@
   .tip{
     margin-top:20px;
     background:var(--tip-bg);
-    border:1px solid #f2ddb0;
+    border:1px solid var(--tip-line);
     border-radius:12px;
     padding:16px 18px;
   }
-  .tip .h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#9a7310;margin-bottom:6px;}
-  .tip p{font-size:14px;color:#4a3b14;line-height:1.6;}
+  .tip .h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--tip-head);margin-bottom:6px;}
+  .tip p{font-size:14px;color:var(--tip-text);line-height:1.6;}
   .actions{display:flex;gap:12px;margin-top:24px;}
   .actions .btn{flex:1;margin-top:0;}
   .bd-community{
@@ -201,18 +254,18 @@
     text-transform:uppercase;
   }
   .insta-hint{
-    background:linear-gradient(135deg,#e8f0fe,#f3f7ff);
-    border:1px solid #c9dbf8;
+    background:var(--insta-bg);
+    border:1px solid var(--insta-line);
     border-radius:12px;
     padding:14px 18px;
     margin-bottom:18px;
   }
-  .insta-hint-q{font-size:13.5px;font-weight:700;color:#1a4fa0;}
-  .insta-hint-a{font-size:12.5px;color:#3c5a8f;margin-top:3px;line-height:1.55;}
+  .insta-hint-q{font-size:13.5px;font-weight:700;color:var(--insta-q);}
+  .insta-hint-a{font-size:12.5px;color:var(--insta-a);margin-top:3px;line-height:1.55;}
   .share-hint{
     margin-top:12px;
     text-align:center;
-    font-size:12.5px;font-weight:600;color:#1a7a3a;
+    font-size:12.5px;font-weight:600;color:var(--share-ok);
     opacity:0;transition:opacity .2s;
   }
   .share-hint.show{opacity:1;}
@@ -230,8 +283,14 @@
     margin-bottom:12px;
     transition:border-color .16s, background .16s, transform .1s;
   }
-  .contact-box a.row:hover{border-color:var(--accent);background:#fff;transform:translateX(3px);}
+  .contact-box a.row:hover{border-color:var(--accent);background:var(--card);transform:translateX(3px);}
   .contact-box a.row svg{width:18px;height:18px;flex:0 0 auto;color:var(--accent);}
+
+  /* ---------- motion preferences ---------- */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important;}
+    html{scroll-behavior:auto;}
+  }
 
   /* ---------- responsive ---------- */
   @media (max-width:700px){
@@ -268,18 +327,18 @@
 
       <form id="calc-form" autocomplete="off">
         <div class="grid">
-          <div class="field"><label>Bodycout</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="bodycout"></div>
-          <div class="field"><label>Depth of puh/Length of dih</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="depthPuh"></div>
-          <div class="field"><label>Width of puh/Girth of dih</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="widthPuh"></div>
-          <div class="field"><label>i pill consumed till now (Fill only if Female — Optional)</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="ipill"></div>
-          <div class="field"><label>Unprotected sex count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="unsafe"></div>
-          <div class="field"><label>Talking stage count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="talking"></div>
-          <div class="field"><label>Situationships count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="situationships"></div>
-          <div class="field"><label>Ex-bf/gf count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="exbf"></div>
-          <div class="field"><label>Relationship count</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="relationships"></div>
-          <div class="field"><label>Age</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="age"></div>
-          <div class="field"><label>Oyo visits</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="oyo"></div>
-          <div class="field"><label>Gooning count to celebrities</label><input type="number" min="0" step="any" placeholder="Enter value" data-key="gooning"></div>
+          <div class="field"><label>Bodycout</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="bodycout"></div>
+          <div class="field"><label>Depth of puh/Length of dih</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="depthPuh"></div>
+          <div class="field"><label>Width of puh/Girth of dih</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="widthPuh"></div>
+          <div class="field"><label>i pill consumed till now (Fill only if Female — Optional)</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="ipill"></div>
+          <div class="field"><label>Unprotected sex count</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="unsafe"></div>
+          <div class="field"><label>Talking stage count</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="talking"></div>
+          <div class="field"><label>Situationships count</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="situationships"></div>
+          <div class="field"><label>Ex-bf/gf count</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="exbf"></div>
+          <div class="field"><label>Relationship count</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="relationships"></div>
+          <div class="field"><label>Age</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="age"></div>
+          <div class="field"><label>Oyo visits</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="oyo"></div>
+          <div class="field"><label>Gooning count to celebrities</label><input type="number" min="0" step="any" inputmode="decimal" placeholder="Enter value" data-key="gooning"></div>
         </div>
 
         <button type="submit" class="btn">Calculate Dahej</button>
@@ -436,6 +495,36 @@
     return String(n);
   }
 
+  /* ---------- animated result ---------- */
+  function reduceMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function animateValue(el, target) {
+    if (reduceMotion() || !isFinite(target) || target <= 0) { el.textContent = inr(target); return; }
+    el.textContent = inr(0);
+    var t0 = null, DUR = 900;
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / DUR);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = inr(target * e);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = inr(target);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function revealResult(value, community) {
+    var v = document.getElementById("calc-value");
+    var card = document.getElementById("calc-result");
+    if (community) { v.textContent = "You deserve a community puh"; return; }
+    card.classList.remove("reveal");
+    void card.offsetWidth;
+    card.classList.add("reveal");
+    animateValue(v, value);
+  }
+
   /* ---------- breakdown generation ---------- */
   var FIXED = [
     "Land Rover Defender OCTA",
@@ -488,11 +577,17 @@
     tip.textContent = "pair utne felao jitni badi chadar ho (it wasnt about pair and chadar)";
 
     var html = "";
-    FIXED.forEach(function (t, i) {
-      html += '<li><span class="num">' + (i + 1) + '</span><span class="txt">' + t + '</span></li>';
+    var idx = 0;
+    var delay;
+    FIXED.forEach(function (t) {
+      delay = reduceMotion() ? 0 : idx * 45;
+      html += '<li style="animation-delay:' + delay + 'ms"><span class="num">' + (idx + 1) + '</span><span class="txt">' + t + '</span></li>';
+      idx++;
     });
     dynamicItems(d).forEach(function (it) {
-      html += '<li><span class="num">+</span><span class="txt">' + it[0] + '</span><span class="qty">' + it[1] + '</span></li>';
+      delay = reduceMotion() ? 0 : idx * 45;
+      html += '<li style="animation-delay:' + delay + 'ms"><span class="num">+</span><span class="txt">' + it[0] + '</span><span class="qty">' + it[1] + '</span></li>';
+      idx++;
     });
     ul.innerHTML = html;
     document.getElementById("bd-amount").textContent = inr(lastValue);
@@ -504,8 +599,7 @@
     lastInputs = readInputs();
     lastValue = calculate(lastInputs);
     lastCalculated = true;
-    var v = document.getElementById("calc-value");
-    v.textContent = isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue);
+    revealResult(lastValue, isCommunityPuh(lastInputs));
     document.getElementById("go-breakdown").disabled = false;
     window.location.hash = "#/breakdown";
   });
@@ -568,8 +662,7 @@
     lastInputs = readInputs();
     lastValue = calculate(lastInputs);
     lastCalculated = true;
-    var v = document.getElementById("calc-value");
-    v.textContent = isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue);
+    revealResult(lastValue, isCommunityPuh(lastInputs));
     document.getElementById("go-breakdown").disabled = false;
     history.replaceState(null, "", "/urand/" + window.__SHARE_ID__);
     show("breakdown");
