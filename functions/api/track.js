@@ -1,14 +1,18 @@
-// POST /api/track — transparent visit tracking (no PII stored)
-// Counts: page views, unique visitors per day (hashed IP dedupe, no raw IP),
-// country via CF-IPCountry, referrer host, and share-link (/urand/*) clicks.
+// POST /api/track — visit analytics
+// Two layers:
+//  1. per-day aggregates (views, uniques, countries, referrers) → dashboard chart
+//  2. per-visit log (IP, geo, user agent, referrer, visitor id) → admin feed, 90-day retention
+// Visit-log keys use a reverse timestamp so KV list() returns newest first.
 export const onRequest = async (context) => {
   const kv = context.env.DAHEJ_KV;
 
-  // ---------- determine path ----------
+  // ---------- payload ----------
   let path = "/";
+  let vid = "";
   try {
     const body = await context.request.json().catch(() => null);
-    if (body && typeof body.path === "string") path = body.path;
+    if (body && typeof body.path === "string") path = body.path.slice(0, 120);
+    if (body && typeof body.vid === "string") vid = body.vid.slice(0, 16);
   } catch (_) {}
 
   // ---------- day key ----------
@@ -19,9 +23,19 @@ export const onRequest = async (context) => {
     String(now.getUTCDate()).padStart(2, "0");
   const dayKey = "a:day:" + ymd;
 
-  // ---------- unique visitor dedupe (hash of IP + day, IP never stored) ----------
+  // ---------- visitor context ----------
   const ip = context.request.headers.get("CF-Connecting-IP") || "unknown";
-  const country = context.request.headers.get("CF-IPCountry") || "unk";
+  const cf = context.request.cf || {};
+  const country = cf.country || context.request.headers.get("CF-IPCountry") || "unk";
+  const city = cf.city || "";
+  const region = cf.region || "";
+  const tz = cf.timezone || "";
+  const lat = cf.latitude != null ? String(cf.latitude) : "";
+  const lon = cf.longitude != null ? String(cf.longitude) : "";
+  const ua = (context.request.headers.get("user-agent") || "").slice(0, 250);
+  const lang = (context.request.headers.get("accept-language") || "").slice(0, 30);
+
+  // ---------- unique visitor dedupe (hash of IP + day) ----------
   const salt = context.env.ANALYTICS_SALT || "dahej-default-salt";
   const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + ip + ":" + ymd));
   const ipHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
@@ -34,7 +48,7 @@ export const onRequest = async (context) => {
     referrer = new URL(ref).hostname.replace(/^www\./, "");
   } catch (_) {}
 
-  // ---------- update counters ----------
+  // ---------- update aggregates ----------
   const [existing, seen] = await Promise.all([
     kv.get(dayKey, "json"),
     kv.get(seenKey),
@@ -57,7 +71,25 @@ export const onRequest = async (context) => {
     doc.referrers[referrer] = (doc.referrers[referrer] || 0) + 1;
   }
 
-  await kv.put(dayKey, JSON.stringify(doc), { expirationTtl: 60 * 60 * 24 * 400 });
+  // ---------- per-visit log record ----------
+  // reverse epoch-ms keeps 14 digits and sorts newest-first in KV list()
+  const revStamp = String(1e14 - now.getTime());
+  const rb = new Uint32Array(1);
+  crypto.getRandomValues(rb);
+  const visitKey = "a:v:" + revStamp + "-" + rb[0].toString(36).slice(0, 4);
+  const visit = {
+    t: now.toISOString(),
+    ip, country, city, region, tz, lat, lon,
+    ua, lang,
+    ref: referrer,
+    path,
+    vid,
+  };
+
+  await Promise.all([
+    kv.put(dayKey, JSON.stringify(doc), { expirationTtl: 60 * 60 * 24 * 400 }),
+    kv.put(visitKey, JSON.stringify(visit), { expirationTtl: 60 * 60 * 24 * 90 }),
+  ]);
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

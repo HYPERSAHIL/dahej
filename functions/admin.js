@@ -62,6 +62,66 @@ function cn(o, decorate) {
     .join("");
 }
 
+/* ---------- compact user-agent parser ---------- */
+function parseUA(s) {
+  const u = s || "";
+  const bot = /bot|crawl|spider|slurp|preview|curl|wget|python|facebookexternalhit|twitterbot|telegrambot/i.test(u);
+  let device = "Desktop";
+  if (/iPhone/i.test(u)) device = "iPhone";
+  else if (/iPad/i.test(u)) device = "iPad";
+  else if (/Android.*Mobile/i.test(u)) device = "Android phone";
+  else if (/Android/i.test(u)) device = "Android tablet";
+  else if (/Windows/i.test(u)) device = "Windows PC";
+  else if (/Macintosh|Mac OS X/i.test(u)) device = "Mac";
+  else if (/Linux/i.test(u)) device = "Linux";
+  const ver = (re) => (u.match(re) || [])[1];
+  const inApp = u.match(/(Instagram|WhatsApp|Snapchat|FBAN|FBAV|Messenger|LinkedIn)/);
+  let browser = "Unknown";
+  if (/curl|wget|python/i.test(u)) browser = "Script";
+  else if (inApp) browser = (/fban|fbav|messenger/i.test(inApp[1]) ? "Facebook" : inApp[1]) + " in-app";
+  else if (/Edg\//.test(u)) browser = "Edge " + ver(/Edg\/(\d+)/);
+  else if (/SamsungBrowser\//.test(u)) browser = "Samsung Internet " + ver(/SamsungBrowser\/(\d+)/);
+  else if (/OPR\//.test(u)) browser = "Opera " + ver(/OPR\/(\d+)/);
+  else if (/Firefox\//.test(u)) browser = "Firefox " + ver(/Firefox\/(\d+)/);
+  else if (/Chrome\//.test(u)) browser = "Chrome " + ver(/Chrome\/(\d+)/);
+  else if (/Version\/\d.*Safari/.test(u)) browser = "Safari " + ver(/Version\/(\d+)/);
+  return { device, browser: browser.replace(/ undefined/, ""), bot };
+}
+
+/* ---------- latest visit records (reverse-timestamp keys → newest first) ---------- */
+async function recentVisits(env) {
+  const kv = env.DAHEJ_KV;
+  const list = await kv.list({ prefix: "a:v:", limit: 150 });
+  const vals = await Promise.all(list.keys.map((k) => kv.get(k.name, "json")));
+  const out = [];
+  list.keys.forEach((k, i) => { if (vals[i]) out.push(vals[i]); });
+  return out;
+}
+
+function visitRows(visits) {
+  if (!visits.length) return `<tr><td colspan="7" class="dim">no visits recorded yet</td></tr>`;
+  return visits.map((v) => {
+    const p = parseUA(v.ua);
+    const dt = String(v.t || "");
+    const time = dt.slice(5, 10).replace("-", "/") + " " + dt.slice(11, 19);
+    const map = v.lat && v.lon ? `https://www.google.com/maps?q=${encodeURIComponent(v.lat + "," + v.lon)}` : "";
+    const loc = [v.city, v.region].filter(Boolean).join(", ") || v.tz || "—";
+    const locHtml = map
+      ? `<a href="${map}" target="_blank" rel="noopener">${flag(v.country)} ${esc(loc)}, ${esc(v.country)} ↗</a>`
+      : `${flag(v.country)} ${esc(loc)}${v.country && v.country !== "unk" ? ", " + esc(v.country) : ""}`;
+    const path = v.path === "/" ? "home" : esc(String(v.path).replace("/urand/", "share:"));
+    return `<tr>
+      <td class="mono">${esc(time)}</td>
+      <td class="mono">${esc(v.ip || "")}</td>
+      <td>${locHtml}</td>
+      <td>${esc(p.device)} · ${esc(p.browser)}${p.bot ? ' <span class="bot">bot</span>' : ""}</td>
+      <td>${esc(v.ref || "direct")}</td>
+      <td>${esc(path)}</td>
+      <td class="mono dim">${esc(String(v.vid || "").slice(0, 6))}</td>
+    </tr>`;
+  }).join("");
+}
+
 /* ---------- last-14-days bar chart (views + uniques), pure inline SVG ---------- */
 function chartSvg(rows) {
   const days = rows.slice(0, 14).reverse(); // oldest → newest
@@ -124,6 +184,7 @@ async function dashboard(env) {
   const avgViews = rows.length ? Math.round(totals.views / rows.length) : 0;
   const best = rows.reduce((m, r) => ((r.views || 0) > (m.views || 0) ? r : m), { date: "—", views: 0 });
   const nf = (n) => n.toLocaleString("en-IN");
+  const visits = await recentVisits(env);
 
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -158,10 +219,22 @@ async function dashboard(env) {
   .dot.v{background:#8fb3ff;}
   .dot.u{background:#63d6a2;}
   .empty{color:#666;font-size:13px;margin:0;text-align:center;padding:24px 0;}
+  input#f{width:100%;padding:9px 12px;border-radius:9px;border:1px solid #33373f;background:#0b0c10;color:#eee;font-size:13px;outline:none;margin-bottom:10px;transition:border-color .15s;}
+  input#f:focus{border-color:#7a8699;}
+  .scroll{overflow-x:auto;}
+  #vis{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
+  #vis th{text-align:left;padding:7px 10px;border-bottom:1px solid #33373f;color:#888;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;}
+  #vis td{padding:7px 10px;border-bottom:1px solid #20242a;color:#ccc;}
+  #vis a{color:#8fb3ff;text-decoration:none;}
+  #vis a:hover{text-decoration:underline;}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .dim{color:#666;}
+  .bot{font-size:10px;background:#3a2a2a;color:#ff9c9c;border-radius:4px;padding:1px 5px;}
+  .count{color:#5d6570;font-weight:600;letter-spacing:0;text-transform:none;}
   @media (prefers-reduced-motion: reduce){*{transition:none!important;}}
 </style></head><body><div class="wrap">
   <div class="top"><h1>dahej.sahil.run — admin</h1><a class="logout" href="/admin?logout=1">Log out</a></div>
-  <p class="sub">transparent visit metrics · no raw IPs stored · hashed dedupe only</p>
+  <p class="sub">visit-level analytics · IP, location, device &amp; referrer logged · 90-day retention</p>
   <div class="cards">
     <div class="card"><div class="n">${nf(totals.views)}</div><div class="l">Page views</div></div>
     <div class="card"><div class="n">${nf(totals.uniques)}</div><div class="l">Unique visitors</div></div>
@@ -176,7 +249,30 @@ async function dashboard(env) {
     <div><h2>Countries</h2><div class="panel"><ul>${cn(totals.countries, true) || '<li class="k" style="color:#666">no data yet</li>'}</ul></div></div>
     <div><h2>Top referrers</h2><div class="panel"><ul>${cn(totals.referrers) || '<li class="k" style="color:#666">no data yet</li>'}</ul></div></div>
   </div>
-</div></body></html>`;
+  <h2>Live visits <span class="count">· latest ${nf(visits.length)}</span></h2>
+  <div class="panel">
+    <input id="f" type="search" placeholder="Filter by IP, city, device, referrer…" autocomplete="off">
+    <div class="scroll">
+      <table id="vis">
+        <thead><tr><th>Time (UTC)</th><th>IP</th><th>Location</th><th>Device</th><th>Referrer</th><th>Path</th><th>ID</th></tr></thead>
+        <tbody>${visitRows(visits)}</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var f = document.getElementById("f");
+  if (!f) return;
+  f.addEventListener("input", function () {
+    var q = f.value.toLowerCase();
+    document.querySelectorAll("#vis tbody tr").forEach(function (tr) {
+      tr.style.display = tr.textContent.toLowerCase().indexOf(q) > -1 ? "" : "none";
+    });
+  });
+})();
+</script>
+</body></html>`;
 }
 
 export const onRequest = async ({ request, env }) => {

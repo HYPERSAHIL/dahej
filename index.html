@@ -672,9 +672,18 @@
 
   /* ---------- transparent visit tracking ---------- */
   try {
+    var vid = "";
+    try {
+      vid = localStorage.getItem("dahej_vid") || "";
+      if (!vid) {
+        vid = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        localStorage.setItem("dahej_vid", vid);
+      }
+    } catch (_) {}
+    var trackPayload = JSON.stringify({ path: location.pathname + location.hash, vid: vid });
     navigator.sendBeacon
-      ? navigator.sendBeacon("/api/track", JSON.stringify({ path: location.pathname + location.hash }))
-      : fetch("/api/track", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ path: location.pathname }), keepalive: true });
+      ? navigator.sendBeacon("/api/track", trackPayload)
+      : fetch("/api/track", { method: "POST", headers: { "content-type": "application/json" }, body: trackPayload, keepalive: true });
   } catch (_) {}
 
   /* ---------- autoplay audio (once) ---------- */
