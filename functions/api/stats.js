@@ -1,8 +1,8 @@
-// GET /api/stats — private analytics view, requires ?key= or x-analytics-key header
+// GET /api/stats — private analytics view, requires ?key=<admin password>
 export const onRequestGet = async ({ env, request }) => {
   const url = new URL(request.url);
   const provided = url.searchParams.get("key") || request.headers.get("x-analytics-key") || "";
-  const expected = env.ANALYTICS_KEY || "";
+  const expected = env.ADMIN_PASSWORD || "";
   if (!expected || provided !== expected) {
     return new Response(JSON.stringify({ error: "forbidden" }), {
       status: 403,
