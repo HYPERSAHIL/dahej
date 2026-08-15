@@ -91,7 +91,7 @@ function parseUA(s) {
 /* ---------- latest visit records (reverse-timestamp keys → newest first) ---------- */
 async function recentVisits(env) {
   const kv = env.DAHEJ_KV;
-  const list = await kv.list({ prefix: "a:v:", limit: 150 });
+  const list = await kv.list({ prefix: "a:v:", limit: 300 });
   const vals = await Promise.all(list.keys.map((k) => kv.get(k.name, "json")));
   const out = [];
   list.keys.forEach((k, i) => { if (vals[i]) out.push(vals[i]); });
