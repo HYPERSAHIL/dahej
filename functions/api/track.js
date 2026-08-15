@@ -1,7 +1,7 @@
 // POST /api/track — visit analytics
 // Two layers:
 //  1. per-day aggregates (views, uniques, countries, referrers) → dashboard chart
-//  2. per-visit log (IP, geo, user agent, referrer, visitor id) → admin feed, 90-day retention
+  //  2. per-visit log (IP, geo, user agent, referrer, visitor id) → admin feed, kept forever (no TTL)
 // Visit-log keys use a reverse timestamp so KV list() returns newest first.
 export const onRequest = async (context) => {
   const kv = context.env.DAHEJ_KV;
@@ -88,7 +88,7 @@ export const onRequest = async (context) => {
 
   await Promise.all([
     kv.put(dayKey, JSON.stringify(doc), { expirationTtl: 60 * 60 * 24 * 400 }),
-    kv.put(visitKey, JSON.stringify(visit), { expirationTtl: 60 * 60 * 24 * 90 }),
+    kv.put(visitKey, JSON.stringify(visit)),
   ]);
 
   return new Response(JSON.stringify({ ok: true }), {

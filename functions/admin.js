@@ -234,7 +234,7 @@ async function dashboard(env) {
   @media (prefers-reduced-motion: reduce){*{transition:none!important;}}
 </style></head><body><div class="wrap">
   <div class="top"><h1>dahej.sahil.run — admin</h1><a class="logout" href="/admin?logout=1">Log out</a></div>
-  <p class="sub">visit-level analytics · IP, location, device &amp; referrer logged · 90-day retention</p>
+  <p class="sub">visit-level analytics · IP, location, device &amp; referrer logged · kept forever</p>
   <div class="cards">
     <div class="card"><div class="n">${nf(totals.views)}</div><div class="l">Page views</div></div>
     <div class="card"><div class="n">${nf(totals.uniques)}</div><div class="l">Unique visitors</div></div>
