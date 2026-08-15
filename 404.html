@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>404 — jaha se aaye ho wahi chale jao</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fff;
+    color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .wrap { max-width: 560px; text-align: center; width: 100%; }
+  .top { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 28px; }
+  img.meme {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 14px;
+    border: 1px solid #eee;
+    display: block;
+    margin: 0 auto 28px;
+  }
+  .links { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .links a {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    text-decoration: none;
+    border: 1px solid #111;
+    border-radius: 999px;
+    padding: 11px 26px;
+    display: inline-block;
+    transition: background .15s ease, color .15s ease;
+  }
+  .links a:hover { background: #111; color: #fff; }
+  .mail { font-size: 15px; color: #333; }
+  .mail a { color: #111; text-decoration: underline; text-underline-offset: 3px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="top">jaha se aaye ho wahi chale jao</p>
+    <img class="meme" src="/acp_meme.jpeg" alt="meme">
+    <div class="links">
+      <p class="mail">wanna taste my dih? mail me at <a href="mailto:yo@sahilfucks.com">yo@sahilfucks.com</a></p>
+      <a href="https://www.instagram.com/ig_sahilyadav" target="_blank" rel="noopener">Instagram/ig_sahilyadav</a>
+    </div>
+  </div>
+  <audio id="kya" src="/kya_cheda.mp3" preload="auto"></audio>
+<script>
+(function () {
+  var a = document.getElementById("kya");
+  function tryPlay() {
+    if (!a) return;
+    var p = a.play();
+    if (p && p.catch) p.catch(function () {});
+  }
+  tryPlay();
+  var evts = ["pointerdown", "keydown", "touchstart", "scroll", "click"];
+  evts.forEach(function (e) { document.addEventListener(e, tryPlay, { once: true, passive: true }); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) tryPlay(); });
+})();
+</script>
+</body>
+</html>
