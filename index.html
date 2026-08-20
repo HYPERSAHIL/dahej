@@ -121,6 +121,30 @@
   }
   .topbar nav a:hover{color:var(--accent);background:var(--soft);}
   .topbar nav a.active{color:var(--accent);}
+  .push-btn{
+    width:34px;height:34px;border-radius:999px;border:1px solid var(--line);background:var(--card);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    color:var(--ink-soft);font-size:15px;
+    transition:transform 160ms var(--ease-out), border-color 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out);
+  }
+  @media (hover:hover) and (pointer:fine){ .push-btn:hover{border-color:var(--line-hover);background:var(--soft);} }
+  .push-btn:active{transform:scale(0.97);}
+  .push-btn.on{color:var(--share-ok);border-color:var(--share-ok);background:var(--soft);}
+  .push-banner{
+    max-width:760px;margin:0 auto 14px;padding:12px 14px;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:12px;
+    transform:translateY(-6px);opacity:0;visibility:hidden;
+    transition:transform 320ms var(--ease-out), opacity 280ms var(--ease-out), visibility 280ms;
+  }
+  .push-banner.show{transform:none;opacity:1;visibility:visible;}
+  .push-banner p{font-size:13px;color:var(--ink-soft);line-height:1.5;flex:1;}
+  .push-banner b{color:var(--ink);}
+  .push-banner .btn{width:auto;margin:0;padding:9px 14px;font-size:13px;white-space:nowrap;}
+  .push-banner .x{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);flex:0 0 auto;}
+  .install-banner{max-width:760px;margin:0 auto 14px;padding:12px 14px;background:var(--tip-bg);border:1px solid var(--tip-line);border-radius:12px;display:flex;align-items:center;gap:12px;transform:translateY(-6px);opacity:0;visibility:hidden;transition:transform 320ms var(--ease-out), opacity 280ms var(--ease-out), visibility 280ms;}
+  .install-banner.show{transform:none;opacity:1;visibility:visible;}
+  .install-banner p{font-size:13px;color:var(--tip-text);flex:1;line-height:1.5;}
 
   main{max-width:760px;margin:0 auto;padding:36px 18px 64px;}
 
@@ -457,9 +481,22 @@
 <div class="topbar">
   <div class="topbar-inner">
     <nav>
+      <button class="push-btn" id="push-btn" type="button" title="Enable notifications" aria-label="Enable push notifications">🔔</button>
       <a href="#/contact">Contact</a>
     </nav>
   </div>
+</div>
+<!-- install prompt (Chrome) -->
+<div class="install-banner" id="install-banner" hidden>
+  <p><b>Install as app</b> — Add to home screen for faster access & push notifications.</p>
+  <button class="btn" id="install-go" type="button" style="width:auto;margin:0;padding:9px 14px;font-size:13px;white-space:nowrap;">Install</button>
+  <button class="x" id="install-x" type="button" aria-label="Dismiss">✕</button>
+</div>
+<!-- push banner (after calc) -->
+<div class="push-banner" id="push-banner" hidden>
+  <p><b>Stay notified?</b> Get a push when your result is ready to share — works even when Chrome is closed.</p>
+  <button class="btn" id="push-enable" type="button">Enable</button>
+  <button class="x" id="push-dismiss" type="button" aria-label="Dismiss">✕</button>
 </div>
 
 <main>
@@ -967,6 +1004,114 @@
     if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches){
       scenes.forEach(function(s){ s.style.transition="opacity 200ms ease"; s.style.transform="none"; });
       if(prog) prog.style.display="none";
+    }
+  })();
+
+  /* ---------- PWA + Web Push (install + notifications) ---------- */
+  (function(){
+    var swReady=null;
+    var deferredPrompt=null;
+    var pushBtn=document.getElementById("push-btn");
+    var pushBanner=document.getElementById("push-banner");
+    var installBanner=document.getElementById("install-banner");
+    // SW register
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.register("/sw.js").then(function(r){ swReady=r; }).catch(function(){});
+      navigator.serviceWorker.addEventListener("message", function(){});
+    }
+    // install prompt
+    window.addEventListener("beforeinstallprompt", function(e){
+      e.preventDefault(); deferredPrompt=e;
+      try{ if(!localStorage.getItem("dahej_install_dismiss")){ installBanner.hidden=false; requestAnimationFrame(function(){ installBanner.classList.add("show"); }); } }catch(_){}
+    });
+    var installGo=document.getElementById("install-go");
+    var installX=document.getElementById("install-x");
+    if(installGo) installGo.addEventListener("click", function(){
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(){ installBanner.classList.remove("show"); setTimeout(function(){ installBanner.hidden=true; }, 300); });
+      deferredPrompt=null;
+    });
+    if(installX) installX.addEventListener("click", function(){
+      installBanner.classList.remove("show"); setTimeout(function(){ installBanner.hidden=true; }, 300);
+      try{ localStorage.setItem("dahej_install_dismiss","1"); }catch(_){}
+    });
+    // push helpers
+    function b64ToU8(s){
+      s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
+      var bin=atob(s); var out=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i); return out;
+    }
+    function canPush(){ return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
+    function updatePushUI(){
+      if(!canPush() || !pushBtn) return;
+      var perm=Notification.permission;
+      if(perm==="granted"){
+        pushBtn.classList.add("on"); pushBtn.textContent="🔔"; pushBtn.title="Notifications enabled";
+        if(pushBanner){ pushBanner.classList.remove("show"); setTimeout(function(){ if(pushBanner) pushBanner.hidden=true; },280); }
+        // ensure subscribed
+        navigator.serviceWorker.ready.then(function(reg){
+          reg.pushManager.getSubscription().then(function(sub){ if(!sub) subscribe(); });
+        });
+      } else if(perm==="denied"){
+        pushBtn.textContent="🔕"; pushBtn.title="Notifications blocked — enable in site settings";
+      } else {
+        pushBtn.textContent="🔔"; pushBtn.title="Enable notifications";
+      }
+    }
+    function subscribe(){
+      if(!canPush()){ alert("Push not supported on this browser. Use Chrome on Android."); return Promise.reject(); }
+      return navigator.serviceWorker.ready.then(function(reg){
+        return fetch("/api/push/vapid").then(function(r){ return r.json(); }).then(function(j){
+          if(!j.publicKey) throw new Error("vapid not configured");
+          return reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: b64ToU8(j.publicKey) });
+        }).then(function(sub){
+          var vid=""; try{ vid=localStorage.getItem("dahej_vid")||""; }catch(_){}
+          return fetch("/api/push/subscribe", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({ subscription: sub.toJSON ? sub.toJSON() : sub, vid: vid }) });
+        }).then(function(){ updatePushUI(); return true; });
+      }).catch(function(err){ console.warn("push subscribe failed", err); alert("Enable failed: "+ (err && err.message || err)); throw err; });
+    }
+    if(pushBtn) pushBtn.addEventListener("click", function(){
+      if(Notification.permission==="granted"){ // toggle off? just show banner
+        updatePushUI();
+        return;
+      }
+      if(Notification.permission==="denied"){ alert("Notifications blocked. Chrome → ⋮ → Settings → Notifications → Allow dahej.sahil.run"); return; }
+      Notification.requestPermission().then(function(p){
+        if(p==="granted") return subscribe();
+        updatePushUI();
+      });
+    });
+    var pushEnable=document.getElementById("push-enable");
+    var pushDismiss=document.getElementById("push-dismiss");
+    if(pushEnable) pushEnable.addEventListener("click", function(){
+      Notification.requestPermission().then(function(p){ if(p==="granted") subscribe(); updatePushUI(); });
+    });
+    if(pushDismiss) pushDismiss.addEventListener("click", function(){
+      pushBanner.classList.remove("show"); setTimeout(function(){ pushBanner.hidden=true; },280);
+      try{ localStorage.setItem("dahej_push_dismiss","1"); }catch(_){}
+    });
+    // show push banner after calc (once)
+    var origReveal=window.revealResult || revealResult;
+    var calcForm=document.getElementById("calc-form");
+    if(calcForm){
+      calcForm.addEventListener("submit", function(){
+        setTimeout(function(){
+          if(!canPush() || Notification.permission!=="default") return;
+          try{ if(localStorage.getItem("dahej_push_dismiss")==="1") return; }catch(_){}
+          if(!pushBanner) return;
+          pushBanner.hidden=false;
+          requestAnimationFrame(function(){ pushBanner.classList.add("show"); });
+        }, 900);
+      });
+    }
+    updatePushUI();
+    if(canPush() && Notification.permission==="default"){
+      // gentle nudge after 8s on first visit (only if not dismissed)
+      setTimeout(function(){
+        try{ if(localStorage.getItem("dahej_push_dismiss")==="1" || localStorage.getItem("dahej_intro_seen")!=="1") return; }catch(_){}
+        if(Notification.permission!=="default" || !pushBanner) return;
+        pushBanner.hidden=false; requestAnimationFrame(function(){ pushBanner.classList.add("show"); });
+      }, 8000);
     }
   })();
 
