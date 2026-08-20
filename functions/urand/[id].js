@@ -56,10 +56,13 @@ export const onRequestGet = async ({ env, params, request }) => {
   const community = isCommunityPuh(inputs);
   const title = community ? "You deserve a community puh" : "My dahej value is ₹" + worth(calcTotal(inputs));
   const desc = community ? "Find out yours on the Dahej Calculator." : "Calculate your own dahej value — it takes 20 seconds.";
+  const ogUrl = url.origin + "/og/" + id;
   html = html
     .replace("<title>Dahej Calculator — Calculate your dahej value</title>", "<title>" + escAttr(title) + " — Dahej Calculator</title>")
     .replace("content=\"Dahej Calculator — what's your dahej value?\"", 'content="' + escAttr(title) + '"')
-    .replace('content="Calculate your estimated dahej value in seconds."', 'content="' + escAttr(desc) + '"');
+    .replace('content="Calculate your estimated dahej value in seconds."', 'content="' + escAttr(desc) + '"')
+    // inject dynamic OG image (after twitter:card meta)
+    .replace('<meta name="twitter:card" content="summary">', '<meta name="twitter:card" content="summary_large_image">\n<meta property="og:image" content="' + escAttr(ogUrl) + '">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n<meta name="twitter:image" content="' + escAttr(ogUrl) + '">');
 
   // embed the saved state for the app shell
   const payload = JSON.stringify(inputs);

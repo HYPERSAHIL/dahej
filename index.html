@@ -13,6 +13,15 @@
 <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23fff' font-family='Arial'%3E₹%3C/text%3E%3C/svg%3E">
+<link rel="alternate" hreflang="en" href="https://dahej.sahil.run/">
+<link rel="alternate" hreflang="hi" href="https://dahej.sahil.run/">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:image" content="https://dahej.sahil.run/og/default">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://dahej.sahil.run">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dahej Calculator","description":"Calculate your estimated dahej value instantly — meme calculator, share with friends.","url":"https://dahej.sahil.run","inLanguage":["en","hi"],"applicationCategory":"EntertainmentApplication","offers":{"@type":"Offer","price":"0"}}</script>
 <style>
   :root{
     --bg:#f6f7f9;
@@ -42,6 +51,9 @@
     --share-ok:#1a7a3a;
     --radius:14px;
     --shadow:0 1px 2px rgba(16,20,28,.04),0 12px 32px -8px rgba(16,20,28,.10);
+    --ease-out:cubic-bezier(0.23,1,0.32,1);
+    --ease-in-out:cubic-bezier(0.77,0,0.175,1);
+    --ease-drawer:cubic-bezier(0.32,0.72,0,1);
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -292,6 +304,91 @@
     html{scroll-behavior:auto;}
   }
 
+  /* ---------- story intro (mobile-first, emil: transform/opacity only) ---------- */
+  .intro{
+    position:fixed;inset:0;z-index:60;
+    display:flex;flex-direction:column;
+    background:var(--bg);
+    opacity:1;visibility:visible;
+    transition:opacity 320ms var(--ease-out), visibility 320ms;
+  }
+  .intro.dismissed{opacity:0;visibility:hidden;pointer-events:none;}
+  .intro-top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;max-width:760px;width:100%;margin:0 auto;
+  }
+  .intro-brand{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;}
+  .intro-skip{
+    font-size:13px;font-weight:700;color:var(--muted);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:7px 14px;cursor:pointer;
+    transition:transform 160ms var(--ease-out), border-color 160ms var(--ease-out), background 160ms var(--ease-out);
+  }
+  @media (hover:hover) and (pointer:fine){ .intro-skip:hover{border-color:var(--line-hover);background:var(--soft);} }
+  .intro-skip:active{transform:scale(0.97);}
+  .intro-stage{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:12px 18px 0;overflow:hidden;
+  }
+  .intro-track{
+    position:relative;width:100%;max-width:520px;height:420px;
+  }
+  .intro-scene{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:18px;
+    opacity:0;transform:translateX(24px) scale(0.97);
+    transition:transform 420ms var(--ease-out), opacity 320ms var(--ease-out);
+    will-change:transform,opacity;
+  }
+  .intro-scene.active{opacity:1;transform:translateX(0) scale(1);}
+  .intro-scene.exit-left{opacity:0;transform:translateX(-24px) scale(0.97);}
+  .intro-ill{
+    width:92px;height:92px;border-radius:22px;
+    background:var(--card);border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    display:flex;align-items:center;justify-content:center;
+    font-size:42px;margin-bottom:18px;
+    transform:translateZ(0);
+  }
+  .intro-scene.active .intro-ill{animation:illPop 520ms var(--ease-out) both;}
+  @keyframes illPop{from{transform:scale(0.92);}to{transform:scale(1);}}
+  .intro-scene h2{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.15;max-width:420px;}
+  .intro-scene p{font-size:14.5px;color:var(--muted);margin-top:8px;max-width:380px;line-height:1.6;}
+  .intro-scene .mini{
+    margin-top:14px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--tip-head);background:var(--tip-bg);border:1px solid var(--tip-line);
+    padding:6px 10px;border-radius:999px;
+  }
+  .intro-bottom{
+    padding:18px;max-width:520px;width:100%;margin:0 auto;
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+  }
+  .intro-dots{display:flex;gap:8px;align-items:center;}
+  .intro-dot{
+    width:8px;height:8px;border-radius:999px;background:var(--line);
+    transition:width 220ms var(--ease-out), background 220ms var(--ease-out), transform 220ms var(--ease-out);
+    cursor:pointer;border:none;padding:0;
+  }
+  .intro-dot.active{width:28px;background:var(--accent);}
+  .intro-cta{width:100%;max-width:520px;}
+  .intro-cta .btn{margin-top:0;}
+  .intro-hint{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .intro-progress{
+    position:absolute;top:0;left:0;right:0;height:3px;background:var(--line);overflow:hidden;
+  }
+  .intro-progress i{
+    display:block;height:100%;width:100%;background:var(--accent);
+    transform-origin:left;transform:scaleX(0);
+  }
+  .intro-progress.run i{animation:prog 2800ms linear forwards;}
+  @keyframes prog{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+
+  /* live preview pulse */
+  .field.has-value input{border-color:var(--accent);}
+  .live-badge{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--share-ok);opacity:0;transition:opacity 200ms var(--ease-out);}
+  .live-badge.show{opacity:1;}
+
   /* ---------- responsive ---------- */
   @media (max-width:700px){
     .grid{grid-template-columns:repeat(2,1fr);}
@@ -299,13 +396,63 @@
     h1{font-size:25px;}
     .result .value{font-size:34px;}
     .bd-total{flex-direction:column;align-items:flex-start;gap:4px;}
+    .intro-track{height:460px;}
+    .intro-scene h2{font-size:24px;}
   }
   @media (max-width:400px){
     .grid{grid-template-columns:1fr;}
+    .intro-track{height:480px;}
   }
 </style>
 </head>
 <body>
+
+<!-- story intro: shows once, swipe/dots, auto-advances — emil: ease-out, transform/opacity only -->
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-label="Story intro">
+  <div class="intro-progress" id="intro-prog"><i></i></div>
+  <div class="intro-top">
+    <span class="intro-brand">Dahej Calculator</span>
+    <button class="intro-skip" id="intro-skip" type="button">Skip →</button>
+  </div>
+  <div class="intro-stage" id="intro-stage">
+    <div class="intro-track" id="intro-track">
+      <div class="intro-scene active" data-i="0">
+        <div class="intro-ill">💌</div>
+        <h2>Shaadi season aa gaya</h2>
+        <p>Rishta aaya, family ne biodata dekha. Sab perfect — bas ek hisaab bacha hai.</p>
+        <span class="mini">Swipe → kahani shuru karo</span>
+      </div>
+      <div class="intro-scene" data-i="1">
+        <div class="intro-ill">📋</div>
+        <h2>Bio-data se zyada</h2>
+        <p>Body count, situationships, OYO logs — yahan har cheez ka rate alag hai.</p>
+        <span class="mini">Har field ka apna daam</span>
+      </div>
+      <div class="intro-scene" data-i="2">
+        <div class="intro-ill">💰</div>
+        <h2>Phir dahej ki baat</h2>
+        <p>Defender OCTA se 10 acre tak — poori list taiyaar hai. Community puh mile to samjho jackpot.</p>
+        <span class="mini">Breakdown me sab dikhega</span>
+      </div>
+      <div class="intro-scene" data-i="3">
+        <div class="intro-ill">🧮</div>
+        <h2>30 sec me hisaab</h2>
+        <p>Values bharo, Calculate dabao, share link se dosto ko bhejo. Hisab lagao?</p>
+        <span class="mini">Live preview bhi chalta hai</span>
+      </div>
+    </div>
+  </div>
+  <div class="intro-bottom">
+    <div class="intro-dots" id="intro-dots" aria-label="Story progress">
+      <button class="intro-dot active" data-go="0" aria-label="Slide 1"></button>
+      <button class="intro-dot" data-go="1" aria-label="Slide 2"></button>
+      <button class="intro-dot" data-go="2" aria-label="Slide 3"></button>
+      <button class="intro-dot" data-go="3" aria-label="Slide 4"></button>
+    </div>
+    <div class="intro-cta"><button class="btn" id="intro-cta" type="button">Hisab lagao →</button></div>
+    <span class="intro-hint">Swipe left / tap dots • shows once</span>
+  </div>
+</div>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -601,8 +748,49 @@
     lastCalculated = true;
     revealResult(lastValue, isCommunityPuh(lastInputs));
     document.getElementById("go-breakdown").disabled = false;
+    try { fetch("/api/event", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({type:"calc", vid: (function(){try{return localStorage.getItem("dahej_vid")||""}catch(_){return ""}})()}), keepalive:true }); } catch(_){}
     window.location.hash = "#/breakdown";
   });
+
+  /* ---------- live preview (emil: transform/opacity only, 300ms debounce) ---------- */
+  (function(){
+    var previewTimer=null, liveBadge=null;
+    try {
+      var host = document.getElementById("calc-result");
+      liveBadge = document.createElement("div");
+      liveBadge.className = "live-badge";
+      liveBadge.textContent = "Live preview";
+      liveBadge.style.marginTop="6px";
+      host.appendChild(liveBadge);
+    } catch(_){}
+    function tickLive(){
+      var d = readInputs();
+      var hasAny = KEYS.some(function(k){ return d[k] > 0; });
+      if (!hasAny) {
+        document.getElementById("calc-value").textContent = "₹0";
+        if(liveBadge) liveBadge.classList.remove("show");
+        document.querySelectorAll(".field").forEach(function(el){ el.classList.remove("has-value"); });
+        return;
+      }
+      var v = calculate(d);
+      var community = isCommunityPuh(d);
+      if (community) document.getElementById("calc-value").textContent = "You deserve a community puh";
+      else document.getElementById("calc-value").textContent = inr(v);
+      if(liveBadge) liveBadge.classList.add("show");
+      KEYS.forEach(function(k){
+        var el = document.querySelector('[data-key="'+k+'"]');
+        if(!el) return;
+        var f = el.closest(".field");
+        if(d[k] > 0) f.classList.add("has-value"); else f.classList.remove("has-value");
+      });
+    }
+    document.querySelectorAll("[data-key]").forEach(function(inp){
+      inp.addEventListener("input", function(){
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(tickLive, 260);
+      });
+    });
+  })();
 
   document.getElementById("go-breakdown").addEventListener("click", function () {
     window.location.hash = "#/breakdown";
@@ -633,6 +821,8 @@
   }
 
   document.getElementById("share").addEventListener("click", function () {
+    // funnel: share intent
+    try { fetch("/api/event", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({type:"share", vid: (function(){try{return localStorage.getItem("dahej_vid")||""}catch(_){return ""}})()}), keepalive:true }); } catch(_){}
     fetch("/api/save", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -685,6 +875,100 @@
       ? navigator.sendBeacon("/api/track", trackPayload)
       : fetch("/api/track", { method: "POST", headers: { "content-type": "application/json" }, body: trackPayload, keepalive: true });
   } catch (_) {}
+
+  /* ---------- story intro (emil: ease-out, transform/opacity, interruptible) ---------- */
+  (function(){
+    var intro = document.getElementById("intro");
+    if(!intro) return;
+    // skip if seen or share link or ?intro=0
+    var seen = false;
+    try { seen = localStorage.getItem("dahej_intro_seen")==="1"; } catch(_){}
+    if (window.__SHARE_INPUTS__ || location.search.indexOf("intro=0")>-1 || seen) { intro.classList.add("dismissed"); return; }
+    var scenes = [].slice.call(document.querySelectorAll(".intro-scene"));
+    var dots = [].slice.call(document.querySelectorAll(".intro-dot"));
+    var prog = document.getElementById("intro-prog");
+    var idx = 0, timer=null, startX=0, curX=0, dragging=false;
+    function go(n){
+      n = Math.max(0, Math.min(3, n));
+      scenes.forEach(function(s,i){
+        s.classList.remove("active","exit-left");
+        if(i===n) s.classList.add("active");
+        else if(i < n) s.classList.add("exit-left");
+      });
+      dots.forEach(function(d,i){ d.classList.toggle("active", i===n); });
+      idx=n;
+      // restart progress bar (CSS animation, transform only)
+      if(prog){ prog.classList.remove("run"); void prog.offsetWidth; prog.classList.add("run"); }
+      resetTimer();
+      if(n===3){ document.getElementById("intro-skip").textContent="Close ✕"; }
+      else document.getElementById("intro-skip").textContent="Skip →";
+    }
+    function resetTimer(){
+      clearTimeout(timer);
+      if(idx >=3) return;
+      timer=setTimeout(function(){ go(idx+1); }, 2800);
+    }
+    function dismiss(){
+      clearTimeout(timer);
+      intro.classList.add("dismissed");
+      try{ localStorage.setItem("dahej_intro_seen","1"); } catch(_){}
+      // reveal audio hint after intro
+      try{ prog.classList.remove("run"); }catch(_){}
+    }
+    document.getElementById("intro-skip").addEventListener("click", function(){ if(idx===3) dismiss(); else if(idx<3) go(idx+1); else dismiss(); });
+    document.getElementById("intro-cta").addEventListener("click", dismiss);
+    dots.forEach(function(d){ d.addEventListener("click", function(){ go(parseInt(d.getAttribute("data-go"),10)); }); });
+    // swipe: Pointer Events + setPointerCapture (apple-design §2), threshold 40px
+    var track = document.getElementById("intro-track");
+    track.addEventListener("pointerdown", function(e){
+      if(e.pointerType==="mouse" && e.button!==0) return;
+      dragging=true; startX=e.clientX; curX=0;
+      try{ track.setPointerCapture(e.pointerId); }catch(_){}
+      clearTimeout(timer);
+      track.style.transition="none";
+    });
+    track.addEventListener("pointermove", function(e){
+      if(!dragging) return;
+      curX = e.clientX - startX;
+      // rubberband at edges (apple §9) — soft resistance
+      if((idx===0 && curX>0) || (idx===3 && curX<0)) curX *= 0.35;
+    });
+    function endDrag(e){
+      if(!dragging) return;
+      dragging=false;
+      track.style.transition="";
+      var dx = curX;
+      var abs = Math.abs(dx);
+      var vel = 0;
+      try{ vel = Math.abs(dx) / 200; }catch(_){}
+      if(abs > 44 || vel > 0.11){
+        if(dx < 0 && idx < 3) go(idx+1);
+        else if(dx > 0 && idx > 0) go(idx-1);
+        else resetTimer();
+      } else {
+        // snap back: re-trigger active scene (no move)
+        go(idx);
+      }
+      curX=0;
+    }
+    track.addEventListener("pointerup", endDrag);
+    track.addEventListener("pointercancel", endDrag);
+    // keyboard
+    document.addEventListener("keydown", function(e){
+      if(intro.classList.contains("dismissed")) return;
+      if(e.key==="ArrowRight") go(idx+1);
+      if(e.key==="ArrowLeft") go(idx-1);
+      if(e.key==="Escape") dismiss();
+    });
+    // autoplay start
+    if(prog) prog.classList.add("run");
+    resetTimer();
+    // reduce-motion: disable progress animation (fewer motion, not zero)
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+      scenes.forEach(function(s){ s.style.transition="opacity 200ms ease"; s.style.transform="none"; });
+      if(prog) prog.style.display="none";
+    }
+  })();
 
   /* ---------- autoplay audio (once) ---------- */
   (function () {

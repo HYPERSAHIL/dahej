@@ -165,24 +165,28 @@ function chartSvg(rows) {
 async function dashboard(env) {
   const kv = env.DAHEJ_KV;
   const list = await kv.list({ prefix: "a:day:" });
+  // batch fetch all day docs in parallel (was sequential — N+1, very slow)
+  const raws = await Promise.all(list.keys.map((k) => kv.get(k.name, "json")));
   const rows = [];
-  for (const k of list.keys) {
-    const raw = await kv.get(k.name, "json");
-    if (raw && typeof raw === "object") rows.push({ date: k.name.replace("a:day:", ""), ...raw });
-  }
+  raws.forEach((raw, i) => {
+    if (raw && typeof raw === "object") rows.push({ date: list.keys[i].name.replace("a:day:", ""), ...raw });
+  });
   rows.sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const totals = { views: 0, uniques: 0, shares: 0, countries: {}, referrers: {} };
+  const totals = { views: 0, uniques: 0, shares: 0, calcs: 0, countries: {}, referrers: {} };
   rows.forEach((r) => {
     totals.views += r.views || 0;
     totals.uniques += r.uniques || 0;
     totals.shares += r.shares || 0;
+    totals.calcs += r.calcs || 0;
     for (const c in r.countries) totals.countries[c] = (totals.countries[c] || 0) + r.countries[c];
     for (const ref in r.referrers) totals.referrers[ref] = (totals.referrers[ref] || 0) + r.referrers[ref];
   });
 
   const avgViews = rows.length ? Math.round(totals.views / rows.length) : 0;
   const best = rows.reduce((m, r) => ((r.views || 0) > (m.views || 0) ? r : m), { date: "—", views: 0 });
+  const calcRate = totals.views ? Math.round((totals.calcs / totals.views) * 100) : 0;
+  const shareRate = totals.calcs ? Math.round((totals.shares / totals.calcs) * 100) : 0;
   const nf = (n) => n.toLocaleString("en-IN");
   const visits = await recentVisits(env);
 
@@ -238,10 +242,13 @@ async function dashboard(env) {
   <div class="cards">
     <div class="card"><div class="n">${nf(totals.views)}</div><div class="l">Page views</div></div>
     <div class="card"><div class="n">${nf(totals.uniques)}</div><div class="l">Unique visitors</div></div>
-    <div class="card"><div class="n">${nf(totals.shares)}</div><div class="l">Share-link visits</div></div>
+    <div class="card"><div class="n">${nf(totals.calcs)}</div><div class="l">Calculates · ${calcRate}% conv</div></div>
+    <div class="card"><div class="n">${nf(totals.shares)}</div><div class="l">Shares · ${shareRate}% of calcs</div></div>
     <div class="card"><div class="n">${nf(avgViews)}</div><div class="l">Avg views / day</div></div>
     <div class="card"><div class="n">${nf(best.views || 0)} <small>${best.date !== "—" ? best.date.slice(5) : ""}</small></div><div class="l">Best day</div></div>
-    <div class="card"><div class="n">${nf(rows.length)}</div><div class="l">Days tracked</div></div>
+  </div>
+  <div class="panel" style="margin-bottom:18px;padding:12px 16px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:#9aa3af;">
+    <span><b style="color:#fff;">Funnel:</b> ${nf(totals.views)} views → ${nf(totals.calcs)} calcs (${calcRate}%) → ${nf(totals.shares)} shares (${shareRate}% of calcs)</span>
   </div>
   <h2>Last 14 days</h2>
   <div class="panel">${chartSvg(rows)}</div>

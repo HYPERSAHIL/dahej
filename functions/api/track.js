@@ -36,11 +36,15 @@ export const onRequest = async (context) => {
   const ua = (context.request.headers.get("user-agent") || "").slice(0, 250);
   const lang = (context.request.headers.get("accept-language") || "").slice(0, 30);
 
-  // ---------- unique visitor dedupe (hash of IP + day) ----------
+  // ---------- throttle: 1 visit log per IP per 8s (prevents spam / reduces KV writes) ----------
   const salt = context.env.ANALYTICS_SALT || "dahej-default-salt";
   const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + ip + ":" + ymd));
   const ipHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
   const seenKey = "a:seen:" + ymd + ":" + ipHash;
+  const throttleKey = "a:throttle:" + ipHash;
+  const throttled = await kv.get(throttleKey);
+  // still count views in aggregate, but skip per-visit log if throttled (saves 1 KV write)
+  const shouldLogVisit = throttled === null;
 
   // ---------- referrer ----------
   let referrer = "";
@@ -72,25 +76,29 @@ export const onRequest = async (context) => {
     doc.referrers[referrer] = (doc.referrers[referrer] || 0) + 1;
   }
 
-  // ---------- per-visit log record ----------
-  // reverse epoch-ms keeps 14 digits and sorts newest-first in KV list()
-  const revStamp = String(1e14 - now.getTime());
-  const rb = new Uint32Array(1);
-  crypto.getRandomValues(rb);
-  const visitKey = "a:v:" + revStamp + "-" + rb[0].toString(36).slice(0, 4);
-  const visit = {
-    t: now.toISOString(),
-    ip, country, city, region, tz, lat, lon,
-    ua, lang,
-    ref: referrer,
-    path,
-    vid,
-  };
-
-  await Promise.all([
-    kv.put(dayKey, JSON.stringify(doc)),
-    kv.put(visitKey, JSON.stringify(visit)),
-  ]);
+  // ---------- per-visit log record (throttled) ----------
+  const puts = [kv.put(dayKey, JSON.stringify(doc))];
+  if (shouldLogVisit) {
+    // reverse epoch-ms keeps 14 digits and sorts newest-first in KV list()
+    const revStamp = String(1e14 - now.getTime());
+    const rb = new Uint32Array(1);
+    crypto.getRandomValues(rb);
+    const visitKey = "a:v:" + revStamp + "-" + rb[0].toString(36).slice(0, 4);
+    const visit = {
+      t: now.toISOString(),
+      ip, country, city, region, tz, lat, lon,
+      ua, lang,
+      ref: referrer,
+      path,
+      vid,
+    };
+    puts.push(kv.put(visitKey, JSON.stringify(visit)));
+    puts.push(kv.put(throttleKey, "1", { expirationTtl: 8 }));
+  } else {
+    // still count as view but avoid per-visit KV write
+    puts.push(Promise.resolve());
+  }
+  await Promise.all(puts);
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
