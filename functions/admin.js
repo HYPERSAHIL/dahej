@@ -299,7 +299,7 @@ export const onRequest = async ({ request, env }) => {
       status: 302,
       headers: {
         location: "/admin",
-        "set-cookie": COOKIE_NAME + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax",
+        "set-cookie": COOKIE_NAME + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax; Secure",
       },
     });
   }
@@ -312,7 +312,7 @@ export const onRequest = async ({ request, env }) => {
         status: 302,
         headers: {
           location: "/admin",
-          "set-cookie": COOKIE_NAME + "=" + token + "; Path=/; Max-Age=" + COOKIE_TTL + "; HttpOnly; SameSite=Lax",
+          "set-cookie": COOKIE_NAME + "=" + token + "; Path=/; Max-Age=" + COOKIE_TTL + "; HttpOnly; SameSite=Lax; Secure",
         },
       });
     }
