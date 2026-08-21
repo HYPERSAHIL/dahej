@@ -857,13 +857,106 @@
     }
   }
 
+  /* ---------- share-card PNG (1200x630) for link previews ---------- */
+  function makeShareCard() {
+    try {
+      var cv = document.createElement("canvas");
+      cv.width = 1200; cv.height = 630;
+      var x = cv.getContext("2d");
+      if (!x) return "";
+
+      // bg gradient + faint grid
+      var bg = x.createLinearGradient(0, 0, 1200, 630);
+      bg.addColorStop(0, "#0b0c10"); bg.addColorStop(1, "#1a1f2b");
+      x.fillStyle = bg; x.fillRect(0, 0, 1200, 630);
+      x.strokeStyle = "rgba(255,255,255,.06)"; x.lineWidth = 1;
+      for (var i = 0; i < 12; i++) { x.beginPath(); x.moveTo(100 + i * 90, 0); x.lineTo(100 + i * 90, 630); x.stroke(); }
+      for (var j = 0; j < 6; j++) { x.beginPath(); x.moveTo(0, 90 + j * 90); x.lineTo(1200, 90 + j * 90); x.stroke(); }
+
+      var FONT = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+
+      // top pill
+      x.fillStyle = "rgba(255,255,255,.08)";
+      x.strokeStyle = "rgba(255,255,255,.14)";
+      if (x.roundRect) { x.beginPath(); x.roundRect(48, 36, 170, 36, 18); x.fill(); x.stroke(); }
+      else { x.fillRect(48, 36, 170, 36); }
+      x.fillStyle = "#9aa3af";
+      x.font = '700 13px ' + FONT;
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText("D A H E J   C A L C U L A T O R", 133, 55);
+
+      // text block
+      var community = isCommunityPuh(lastInputs);
+      var t1 = community ? "You deserve a" : "My dahej value is";
+      var t2 = community ? "community puh" : inr(lastValue);
+      var t3 = community ? "Find out yours \u2192 dahej.sahil.run" : "Calculate yours \u2192 dahej.sahil.run";
+      x.textAlign = "left"; x.textBaseline = "alphabetic";
+      x.fillStyle = "#8d949f";
+      x.font = '600 28px ' + FONT;
+      x.fillText(t1, 48, 160);
+
+      var size = 84;
+      x.fillStyle = "#ffffff";
+      x.font = '800 ' + size + 'px ' + FONT;
+      while (x.measureText(t2).width > 700 && size > 40) {
+        size -= 4;
+        x.font = '800 ' + size + 'px ' + FONT;
+      }
+      x.fillText(t2, 48, 240);
+
+      var acc = x.createLinearGradient(48, 0, 132, 0);
+      acc.addColorStop(0, "#8fb3ff"); acc.addColorStop(1, "#63d6a2");
+      x.fillStyle = acc;
+      x.fillRect(48, 262, 84, 4);
+
+      x.fillStyle = "#7d8590";
+      x.font = '500 20px ' + FONT;
+      x.fillText(t3, 48, 306);
+
+      // right mini-panel (fixed items preview), skipped where roundRect is missing
+      if (x.roundRect) {
+        x.fillStyle = "rgba(255,255,255,.06)";
+        x.strokeStyle = "rgba(255,255,255,.10)";
+        x.beginPath(); x.roundRect(780, 120, 372, 390, 24); x.fill(); x.stroke();
+        var items = ["Defender OCTA", "Fortuner GR-S", "Scorpio N 4\u00d74", "10 Cr Cash", "5 Trips \u00d7 5 yrs", "10 Acre land"];
+        for (var k = 0; k < items.length; k++) {
+          var yy = 220 + k * 44;
+          x.fillStyle = "#1c2027";
+          x.beginPath(); x.roundRect(804, yy, 28, 28, 8); x.fill();
+          x.fillStyle = "#8fb3ff";
+          x.font = '800 12px ' + FONT;
+          x.textAlign = "center"; x.textBaseline = "middle";
+          x.fillText(String(k + 1), 818, yy + 15);
+          x.fillStyle = "#c6cbd3";
+          x.font = '600 15px ' + FONT;
+          x.textAlign = "left"; x.textBaseline = "middle";
+          x.fillText(items[k], 848, yy + 15);
+        }
+        x.fillStyle = "#5d6570";
+        x.font = '700 11px ' + FONT;
+        x.textAlign = "center"; x.textBaseline = "alphabetic";
+        x.fillText("D A H E J . S A H I L . R U N", 966, 492);
+      }
+
+      // bottom accent strip
+      var strip = x.createLinearGradient(0, 0, 1200, 0);
+      strip.addColorStop(0, "#8fb3ff"); strip.addColorStop(1, "#63d6a2");
+      x.fillStyle = strip;
+      x.fillRect(0, 626, 1200, 4);
+
+      return cv.toDataURL("image/png");
+    } catch (_) {
+      return "";
+    }
+  }
+
   document.getElementById("share").addEventListener("click", function () {
     // funnel: share intent
     try { fetch("/api/event", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({type:"share", vid: (function(){try{return localStorage.getItem("dahej_vid")||""}catch(_){return ""}})()}), keepalive:true }); } catch(_){}
     fetch("/api/save", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ inputs: lastInputs })
+      body: JSON.stringify({ inputs: lastInputs, og: makeShareCard() })
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {

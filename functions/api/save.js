@@ -19,6 +19,14 @@ export async function onRequestPost(context) {
       clean[k] = isFinite(v) && v >= 0 ? v : 0;
     }
 
+    // Optional share-card PNG generated client-side (data URL). Used by
+    // /og/:id to give WhatsApp/Telegram/etc. an image preview.
+    let ogData = "";
+    if (typeof body.og === "string" && body.og.startsWith("data:image/png;base64,")) {
+      // ~300 KB decoded ceiling; flat-color cards land well under this.
+      if (body.og.length <= 400000) ogData = body.og;
+    }
+
     // Collision-resistant short id (base62, 5 chars)
     const kv = context.env.DAHEJ_KV;
     if (!kv) {
@@ -70,8 +78,13 @@ export async function onRequestPost(context) {
     await kv.put("share:" + id, JSON.stringify(clean), {
       expirationTtl: 60 * 60 * 24 * 90, // 90 days
     });
+    if (ogData) {
+      await kv.put("og:" + id, ogData, {
+        expirationTtl: 60 * 60 * 24 * 90,
+      });
+    }
 
-    return new Response(JSON.stringify({ id }), {
+    return new Response(JSON.stringify({ id, og: Boolean(ogData) }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });

@@ -1,6 +1,10 @@
-// GET /og/:id — dynamic OG image (SVG) for share links
-// Returns 1200x630 image for WhatsApp/Telegram/Twitter previews.
-// No external deps — pure SVG, fast, edge-cached.
+// GET /og/:id — share-card image for link previews.
+// 1. If a PNG card was generated client-side at save time (stored in KV by
+//    /api/save), serve it — PNG renders in WhatsApp/Instagram/Twitter previews,
+//    unlike SVG which most crawlers ignore.
+// 2. Otherwise fall back to the server-generated SVG card (older shares).
+
+const PNG_PREFIX = "data:image/png;base64,";
 
 const W = {
   bodycout: 3, depthPuh: 2.5, widthPuh: 2.5, ipill: 2, unsafe: 4,
@@ -25,30 +29,26 @@ function fmt(n) {
 }
 function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-export const onRequestGet = async ({ env, params }) => {
-  const id = String(params.id || "").slice(0, 12);
-  const raw = env.DAHEJ_KV ? await env.DAHEJ_KV.get("share:" + id) : null;
+/* ---------- server-rendered SVG fallback (works for pre-PNG shares) ---------- */
+function svgCard(d) {
   let titleLine = "Dahej Calculator";
   let valueLine = "Calculate your dahej value";
   let subLine = "sahil.run · 20 seconds · share with friends";
 
-  if (raw) {
-    try {
-      const d = JSON.parse(raw);
-      if (isCommunityPuh(d)) {
-        titleLine = "You deserve a";
-        valueLine = "community puh";
-        subLine = "Find out yours → dahej.sahil.run";
-      } else {
-        const v = calcTotal(d);
-        titleLine = "My dahej value is";
-        valueLine = fmt(v);
-        subLine = "Calculate yours → dahej.sahil.run";
-      }
-    } catch (_) {}
+  if (d) {
+    if (isCommunityPuh(d)) {
+      titleLine = "You deserve a";
+      valueLine = "community puh";
+      subLine = "Find out yours → dahej.sahil.run";
+    } else {
+      const v = calcTotal(d);
+      titleLine = "My dahej value is";
+      valueLine = fmt(v);
+      subLine = "Calculate yours → dahej.sahil.run";
+    }
   }
 
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" role="img">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -59,27 +59,22 @@ export const onRequestGet = async ({ env, params }) => {
       <stop offset="0%" stop-color="#8fb3ff"/>
       <stop offset="100%" stop-color="#63d6a2"/>
     </linearGradient>
-    <filter id="glow"><feGaussianBlur stdDeviation="18" flood-opacity="0.35"/></filter>
   </defs>
   <rect width="1200" height="630" rx="0" fill="url(#bg)"/>
-  <!-- subtle grid -->
   <g opacity="0.06" stroke="#fff" stroke-width="1">
     ${Array.from({length: 12}, (_,i)=>`<line x1="${100+i*90}" y1="0" x2="${100+i*90}" y2="630"/>`).join("")}
     ${Array.from({length: 6}, (_,i)=>`<line x1="0" y1="${90+i*90}" x2="1200" y2="${90+i*90}"/>`).join("")}
   </g>
-  <!-- top pill -->
   <g transform="translate(48,36)">
     <rect x="0" y="0" width="170" height="36" rx="18" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.14)"/>
     <text x="85" y="23" text-anchor="middle" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="13" font-weight="700" letter-spacing="0.14em" fill="#9aa3af">DAHEJ CALCULATOR</text>
   </g>
-  <!-- value block -->
   <g transform="translate(48,150)">
     <text x="0" y="0" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="28" font-weight="600" fill="#8d949f">${esc(titleLine)}</text>
     <text x="0" y="84" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="78" font-weight="800" letter-spacing="-0.04em" fill="#fff">${esc(valueLine)}</text>
     <rect x="0" y="108" width="84" height="4" rx="2" fill="url(#accent)"/>
     <text x="0" y="148" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="18" font-weight="500" fill="#7d8590">${esc(subLine)}</text>
   </g>
-  <!-- right card hint -->
   <g transform="translate(780,120)">
     <rect x="0" y="0" width="372" height="390" rx="24" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.10)"/>
     <rect x="24" y="24" width="324" height="18" rx="9" fill="rgba(255,255,255,0.08)"/>
@@ -94,11 +89,39 @@ export const onRequestGet = async ({ env, params }) => {
     </g>
     <text x="186" y="370" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="700" letter-spacing="0.12em" fill="#5d6570">DAHEJ.SAHIL.RUN</text>
   </g>
-  <!-- bottom bar -->
   <rect x="0" y="626" width="1200" height="4" fill="url(#accent)"/>
 </svg>`;
+}
 
-  return new Response(svg, {
+export const onRequestGet = async ({ env, params }) => {
+  const id = String(params.id || "").slice(0, 12);
+  // ids are base62 from /api/save; be strict before touching KV
+  if (!/^[A-Za-z0-9]{1,16}$/.test(id)) {
+    return new Response(null, { status: 404 });
+  }
+
+  // 1. client-generated PNG card
+  const data = env.DAHEJ_KV ? await env.DAHEJ_KV.get("og:" + id) : null;
+  if (data && data.startsWith(PNG_PREFIX)) {
+    const bin = atob(data.slice(PNG_PREFIX.length));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Response(bytes, {
+      status: 200,
+      headers: {
+        "content-type": "image/png",
+        "cache-control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+      },
+    });
+  }
+
+  // 2. SVG fallback rendered from the saved inputs
+  let inputs = null;
+  const raw = env.DAHEJ_KV ? await env.DAHEJ_KV.get("share:" + id) : null;
+  if (raw) {
+    try { inputs = JSON.parse(raw); } catch (_) {}
+  }
+  return new Response(svgCard(inputs), {
     status: 200,
     headers: {
       "content-type": "image/svg+xml; charset=utf-8",
