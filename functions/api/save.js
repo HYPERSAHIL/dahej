@@ -28,10 +28,13 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Light per-IP rate limit (5 saves / 60s, KV TTL floor is 60s) so the KV namespace can't be spammed
+    // Light per-IP rate limit (5 saves per fixed 1-minute window) so the KV
+    // namespace can't be spammed. Keyed by minute bucket: slow-drip requests
+    // can't extend the window the way a reset-on-every-hit TTL could.
     const ip = context.request.headers.get("CF-Connecting-IP") || "unknown";
     const salt = context.env.ANALYTICS_SALT || "dahej-default-salt";
-    const hashBuf = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":rl:" + ip));
+    const rlMinute = Math.floor(Date.now() / 60000);
+    const hashBuf = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":rl:" + ip + ":" + rlMinute));
     const ipHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
     const rlKey = "a:rl:" + ipHash;
     const hits = Number(await kv.get(rlKey)) || 0;
@@ -41,7 +44,7 @@ export async function onRequestPost(context) {
         headers: { "content-type": "application/json" },
       });
     }
-    await kv.put(rlKey, String(hits + 1), { expirationTtl: 60 });
+    await kv.put(rlKey, String(hits + 1), { expirationTtl: 120 });
 
     let id = "";
     let attempts = 0;

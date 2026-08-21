@@ -41,6 +41,22 @@ export const onRequest = async (context) => {
   const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + ip + ":" + ymd));
   const ipHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
   const seenKey = "a:seen:" + ymd + ":" + ipHash;
+
+  // ---------- per-IP rate limit (fixed 1-minute windows, 30 hits) ----------
+  // Fixed window keyed by minute bucket so slow-drip requests can't extend it.
+  // Blocked requests cost one KV read and no writes, protecting the write quota.
+  const rlMinute = Math.floor(now.getTime() / 60000);
+  const rlBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":trl:" + ip + ":" + rlMinute));
+  const rlHash = [...new Uint8Array(rlBuf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+  const rlKey = "a:t_rl:" + rlHash;
+  const rlHits = Number(await kv.get(rlKey)) || 0;
+  if (rlHits >= 30) {
+    return new Response(JSON.stringify({ error: "too many requests" }), {
+      status: 429,
+      headers: { "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "*" },
+    });
+  }
+  await kv.put(rlKey, String(rlHits + 1), { expirationTtl: 120 });
   const throttleKey = "a:throttle:" + ipHash;
   const throttled = await kv.get(throttleKey);
   // still count views in aggregate, but skip per-visit log if throttled (saves 1 KV write)
