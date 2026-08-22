@@ -482,6 +482,7 @@
   <div class="topbar-inner">
     <nav>
       <button class="push-btn" id="push-btn" type="button" title="Enable notifications" aria-label="Enable push notifications">🔔</button>
+      <a href="/top">Top</a>
       <a href="#/contact">Contact</a>
     </nav>
   </div>
@@ -567,6 +568,10 @@
       <div class="actions">
         <button class="btn ghost" id="recalc">← Recalculate</button>
         <button class="btn" id="share">Share Result</button>
+      </div>
+      <div class="actions">
+        <a class="btn ghost" id="wa-share" href="#" style="text-decoration:none;">Share on WhatsApp</a>
+        <a class="btn ghost" id="board-link" href="/top" style="text-decoration:none;">Leaderboard ↗</a>
       </div>
       <p class="share-hint" id="share-hint">Share link copied!</p>
     </div>
@@ -950,7 +955,7 @@
     }
   }
 
-  document.getElementById("share").addEventListener("click", function () {
+  function saveAndShare(mode) {
     // funnel: share intent
     try { fetch("/api/event", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({type:"share", vid: (function(){try{return localStorage.getItem("dahej_vid")||""}catch(_){return ""}})()}), keepalive:true }); } catch(_){}
     fetch("/api/save", {
@@ -963,17 +968,30 @@
         if (!data || !data.id) throw new Error("no id");
         var link = location.origin + "/urand/" + data.id;
         history.replaceState(null, "", "/urand/" + data.id);
-        if (navigator.share) {
+        var text = "My estimated dahej value is " + (isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue)) + " — calculate yours! " + link;
+        if (mode === "wa") {
+          window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
+        } else if (navigator.share) {
           navigator.share({
             title: "My Dahej Value",
-            text: "My estimated dahej value is " + (isCommunityPuh(lastInputs) ? "You deserve a community puh" : inr(lastValue)) + " — calculate yours!",
+            text: text,
             url: link
           }).catch(function () { copyText(link); });
         } else {
           copyText(link);
+          window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
         }
       })
       .catch(function () { copyText(location.href); });
+  }
+
+  document.getElementById("share").addEventListener("click", function () {
+    saveAndShare("native");
+  });
+
+  document.getElementById("wa-share").addEventListener("click", function (e) {
+    e.preventDefault();
+    saveAndShare("wa");
   });
 
   /* ---------- share-link loading (served by /urand/:id) ---------- */

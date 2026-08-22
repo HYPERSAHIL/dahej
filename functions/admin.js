@@ -173,12 +173,13 @@ async function dashboard(env) {
   });
   rows.sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  const totals = { views: 0, uniques: 0, shares: 0, calcs: 0, countries: {}, referrers: {} };
+  const totals = { views: 0, uniques: 0, shares: 0, calcs: 0, shareIntents: 0, countries: {}, referrers: {} };
   rows.forEach((r) => {
     totals.views += r.views || 0;
     totals.uniques += r.uniques || 0;
     totals.shares += r.shares || 0;
     totals.calcs += r.calcs || 0;
+    totals.shareIntents += r.shareIntents || 0;
     for (const c in r.countries) totals.countries[c] = (totals.countries[c] || 0) + r.countries[c];
     for (const ref in r.referrers) totals.referrers[ref] = (totals.referrers[ref] || 0) + r.referrers[ref];
   });
@@ -187,6 +188,8 @@ async function dashboard(env) {
   const best = rows.reduce((m, r) => ((r.views || 0) > (m.views || 0) ? r : m), { date: "—", views: 0 });
   const calcRate = totals.views ? Math.round((totals.calcs / totals.views) * 100) : 0;
   const shareRate = totals.calcs ? Math.round((totals.shares / totals.calcs) * 100) : 0;
+  const intentRate = totals.calcs ? Math.round((totals.shareIntents / totals.calcs) * 100) : 0;
+  const visitRate = totals.shareIntents ? Math.round((totals.shares / totals.shareIntents) * 100) : 0;
   const nf = (n) => n.toLocaleString("en-IN");
   const visits = await recentVisits(env);
 
@@ -248,7 +251,7 @@ async function dashboard(env) {
     <div class="card"><div class="n">${nf(best.views || 0)} <small>${best.date !== "—" ? best.date.slice(5) : ""}</small></div><div class="l">Best day</div></div>
   </div>
   <div class="panel" style="margin-bottom:18px;padding:12px 16px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:#9aa3af;">
-    <span><b style="color:#fff;">Funnel:</b> ${nf(totals.views)} views → ${nf(totals.calcs)} calcs (${calcRate}%) → ${nf(totals.shares)} shares (${shareRate}% of calcs)</span>
+    <span><b style="color:#fff;">Funnel:</b> ${nf(totals.views)} views → ${nf(totals.calcs)} calcs (${calcRate}%) → ${nf(totals.shareIntents)} share intents (${intentRate}% of calcs) → ${nf(totals.shares)} share-link visits (${visitRate}% of intents)</span>
   </div>
   <h2>Last 14 days</h2>
   <div class="panel">${chartSvg(rows)}</div>

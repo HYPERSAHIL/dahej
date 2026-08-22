@@ -27,7 +27,7 @@ export const onRequestPost = async (context) => {
 
     const doc = (await kv.get(dayKey, "json")) || { views: 0, uniques: 0, shares: 0, countries: {}, referrers: {} };
     if (type === "calc") doc.calcs = (doc.calcs || 0) + 1;
-    if (type === "share") doc.shares = (doc.shares || 0) + 1;
+    if (type === "share") doc.shareIntents = (doc.shareIntents || 0) + 1;
     await kv.put(dayKey, JSON.stringify(doc));
 
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json", "access-control-allow-origin": "*" } });

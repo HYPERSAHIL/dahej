@@ -1,4 +1,12 @@
 // POST /api/save — save a calculator state, return a short id
+
+// weights mirror index.html + urand/[id].js (kept in sync manually)
+const W_BOARD = {
+  bodycout: 3, depthPuh: 2.5, widthPuh: 2.5, ipill: 2, unsafe: 4,
+  talking: 1.5, situationships: 3, exbf: 5, relationships: 4,
+  oyo: 1.2, gooning: 1.5
+};
+
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json().catch(() => null);
@@ -75,14 +83,35 @@ export async function onRequestPost(context) {
       });
     } while (existing !== null);
 
+    const TTL_YEAR = 60 * 60 * 24 * 365; // resurfaced old chats keep working previews
     await kv.put("share:" + id, JSON.stringify(clean), {
-      expirationTtl: 60 * 60 * 24 * 90, // 90 days
+      expirationTtl: TTL_YEAR,
     });
     if (ogData) {
       await kv.put("og:" + id, ogData, {
-        expirationTtl: 60 * 60 * 24 * 90,
+        expirationTtl: TTL_YEAR,
       });
     }
+
+    // ---------- leaderboard board (best-effort) ----------
+    // Keep a top-100 index at a:board so /top reads one key instead of
+    // listing + fetching every share. Last-write-wins on concurrent saves:
+    // fine for a meme leaderboard.
+    try {
+      let score = 0;
+      for (const k of KEYS) {
+        if (k === "age") continue;
+        score += clean[k] * W_BOARD[k];
+      }
+      if (clean.age > 0) score += Math.max(0, clean.age - 22) * 1.4;
+      const value = Math.max(50000, Math.round(150000 + score * 18500));
+      const entry = { id, v: value, t: new Date().toISOString().slice(0, 10) };
+      const boardRaw = await kv.get("a:board", "json");
+      const board = Array.isArray(boardRaw) ? boardRaw : [];
+      board.push(entry);
+      board.sort((a, b) => (b.v || 0) - (a.v || 0));
+      await kv.put("a:board", JSON.stringify(board.slice(0, 100)), { expirationTtl: TTL_YEAR });
+    } catch (_) {}
 
     return new Response(JSON.stringify({ id, og: Boolean(ogData) }), {
       status: 200,
