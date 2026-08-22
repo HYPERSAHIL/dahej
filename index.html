@@ -748,6 +748,34 @@
     return list;
   }
 
+  /* ---------- pro-tip rotation ---------- */
+  var TIP_LINES = [
+    "pair utne felao jitni badi chadar ho (it wasnt about pair and chadar)",
+    "Bodycount itna ki census department tumse confirm karti hai",
+    "Condom companies tumhare naam pe CSR budget badha rahi hain",
+    "Unprotected count dekh ke WHO travel advisory jaari kar deti hai",
+    "Puh ki depth survey? Pehle mapping permission le lo",
+    "Bedroom performance? Bhai pehle bedroom to dilwa do",
+    "Oyo ne tumhare naam pe loyalty mandir banane ka plot khareeda hai",
+    "Tumhari sex life ko log research paper mein cite karte hain",
+    "Exs ka group chat ab tumpe hi research kar raha hai",
+    "Itni i-pill strips se ek medical store khad sakta hai",
+    "Chadar se zyada teri search history badi hai",
+    "First night pe bhi tu 'buffering' hi dikhata hai",
+    "Positions ka poora gyaan, practical mein round fail",
+    "Bed jo tootta hai uski awaaz hi teri shaadi ka shehnai hai",
+    "Stamina 2G jaisa \u2014 connect hota hai, chalta nahi",
+    "Talking stage mein sab bata diya? Ab dahej ke saath NDA bhi sign karao",
+    "Dahej mein Dettol zaroor maangna, safai apni taraf se karna",
+    "Wet dreams bhi tujhse breakup kar chuke hain",
+    "Teri chadar utni badi hai hi nahi, pair khud mor leta hai",
+    "Ek raat ka scene? Tere hisaab se to puri housing society ban gayi",
+    "Dahej lene se pehle check kar le \u2014 warranty void to nahi"
+  ];
+  function pickTip() {
+    return TIP_LINES[Math.floor(Math.random() * TIP_LINES.length)];
+  }
+
   function renderBreakdown() {
     var d = lastInputs;
     var community = isCommunityPuh(d);
@@ -762,13 +790,13 @@
       communityBox.hidden = false;
       hint.hidden = true;
       ul.innerHTML = "";
-      tip.textContent = "pair utne felao jitni badi chadar ho (it wasnt about pair and chadar)";
+      tip.textContent = pickTip();
       return;
     }
     totalBox.hidden = false;
     communityBox.hidden = true;
     hint.hidden = false;
-    tip.textContent = "pair utne felao jitni badi chadar ho (it wasnt about pair and chadar)";
+    tip.textContent = pickTip();
 
     var html = "";
     var idx = 0;
