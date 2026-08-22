@@ -554,6 +554,7 @@
         <span class="t1">Estimated Dahej</span>
         <span class="t2" id="bd-amount">₹0</span>
       </div>
+      <p id="bd-rank" style="margin:10px 4px 0;font-size:13px;font-weight:600;color:var(--muted);"></p>
 
       <div class="bd-community" id="bd-community" hidden>
         <p class="bd-community-main">You deserve a community puh</p>
@@ -784,9 +785,47 @@
     });
     ul.innerHTML = html;
     document.getElementById("bd-amount").textContent = inr(lastValue);
+    updateRankLine();
+  }
+
+  function updateRankLine() {
+    var el = document.getElementById("bd-rank");
+    if (!el || isCommunityPuh(lastInputs)) { if (el) el.textContent = ""; return; }
+    try {
+      fetch("/api/rank?v=" + encodeURIComponent(lastValue))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || !d.rank || !el) return;
+          var suffix = d.rank === 2 ? " — only Bonnie Blue is ahead" : "";
+          el.innerHTML = "You would be <b>#" + d.rank + "</b> on the leaderboard" + suffix + ' · <a href="/top" style="color:var(--accent);text-decoration:underline;">see the board ↗</a>';
+        })
+        .catch(function () {});
+    } catch (_) {}
   }
 
   /* ---------- wiring ---------- */
+  /* ---------- live result preview while typing ---------- */
+  (function () {
+    var vEl = document.getElementById("calc-value");
+    var hint = document.querySelector("#page-calc .result .hint");
+    var timer = null;
+    document.querySelectorAll("#calc-form input").forEach(function (el) {
+      el.addEventListener("input", function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          if (!vEl) return;
+          var d = readInputs();
+          if (isCommunityPuh(d)) {
+            vEl.textContent = "You deserve a community puh";
+            return;
+          }
+          vEl.textContent = inr(calculate(d));
+          if (hint && lastCalculated) hint.textContent = "Breakdown will appear here.";
+        }, 150);
+      });
+    });
+  })();
+
   document.getElementById("calc-form").addEventListener("submit", function (e) {
     e.preventDefault();
     lastInputs = readInputs();
