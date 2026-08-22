@@ -508,6 +508,7 @@
       <div class="calc-head">
         <h1>Dahej Calculator</h1>
         <p class="sub">Calculate your dahej value</p>
+        <p class="sub" id="social-proof" hidden style="margin-top:2px;font-weight:600;"></p>
       </div>
 
       <form id="calc-form" autocomplete="off">
@@ -569,7 +570,10 @@
         <button class="btn ghost" id="recalc">← Recalculate</button>
         <button class="btn" id="share">Share Result</button>
       </div>
-      <div class="actions">
+      <div style="margin-top:12px;">
+        <input id="board-name" maxlength="24" placeholder="Name for the leaderboard (optional)" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;color:var(--ink);background:var(--field-bg);outline:none;">
+      </div>
+      <div class="actions" style="margin-top:12px;">
         <a class="btn ghost" id="wa-share" href="#" style="text-decoration:none;">Share on WhatsApp</a>
         <a class="btn ghost" id="board-link" href="/top" style="text-decoration:none;">Leaderboard ↗</a>
       </div>
@@ -955,13 +959,18 @@
     }
   }
 
+  function boardName() {
+    var el = document.getElementById("board-name");
+    return el ? el.value.replace(/[<>]/g, "").trim().slice(0, 24) : "";
+  }
+
   function saveAndShare(mode) {
     // funnel: share intent
     try { fetch("/api/event", { method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({type:"share", vid: (function(){try{return localStorage.getItem("dahej_vid")||""}catch(_){return ""}})()}), keepalive:true }); } catch(_){}
     fetch("/api/save", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ inputs: lastInputs, og: makeShareCard() })
+      body: JSON.stringify({ inputs: lastInputs, og: makeShareCard(), name: boardName() })
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
@@ -1224,6 +1233,20 @@
         pushBanner.hidden=false; requestAnimationFrame(function(){ pushBanner.classList.add("show"); });
       }, 8000);
     }
+  })();
+
+  /* ---------- social proof counter ---------- */
+  (function () {
+    try {
+      fetch("/api/stats").then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
+        if (!s || !s.calcs) return;
+        var el = document.getElementById("social-proof");
+        if (!el) return;
+        el.textContent = s.calcs.toLocaleString("en-IN") + " dahejs calculated · " +
+          (s.uniques || 0).toLocaleString("en-IN") + " curious people";
+        el.hidden = false;
+      }).catch(function () {});
+    } catch (_) {}
   })();
 
   /* ---------- autoplay audio (once) ---------- */

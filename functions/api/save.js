@@ -27,6 +27,12 @@ export async function onRequestPost(context) {
       clean[k] = isFinite(v) && v >= 0 ? v : 0;
     }
 
+    // Optional leaderboard display name (rendered escaped by /top; cap length)
+    let name = "";
+    if (typeof body.name === "string") {
+      name = body.name.replace(/[<>]/g, "").trim().slice(0, 24);
+    }
+
     // Optional share-card PNG generated client-side (data URL). Used by
     // /og/:id to give WhatsApp/Telegram/etc. an image preview.
     let ogData = "";
@@ -106,6 +112,7 @@ export async function onRequestPost(context) {
       if (clean.age > 0) score += Math.max(0, clean.age - 22) * 1.4;
       const value = Math.max(50000, Math.round(150000 + score * 18500));
       const entry = { id, v: value, t: new Date().toISOString().slice(0, 10) };
+      if (name) entry.n = name;
       const boardRaw = await kv.get("a:board", "json");
       const board = Array.isArray(boardRaw) ? boardRaw : [];
       board.push(entry);

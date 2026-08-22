@@ -25,7 +25,7 @@ function rowsHtml(entries, startRank) {
     const r1 = rank <= 3 ? medal[rank - 1] : "#" + rank;
     const inner =
       '<span class="rank">' + r1 + "</span>" +
-      '<span class="who">' + (e.name ? esc(e.name) : "Anonymous") + "</span>" +
+      '<span class="who">' + (e.n ? esc(e.n) : "Anonymous") + "</span>" +
       '<span class="val">' + worth(e.v || 0) + "</span>" +
       (e.note ? '<span class="note">' + esc(e.note) + "</span>" : "") +
       '<span class="meta">' + esc(e.t || "") + "</span>";
