@@ -720,14 +720,42 @@
   }
 
   /* ---------- breakdown generation ---------- */
-  var FIXED = [
-    "Land Rover Defender OCTA",
-    "Toyota Fortuner GR-S 4X4 Diesel AT (GR Sport)",
-    "Mahindra Scorpio N Z8L (4\u00d74) Automatic",
-    "10 Crore Cash (new notes, 500 notes only)",
-    "5 International trips every year for 5 years",
-    "10 Acre land",
-    "A penthouse"
+  var FIX_SETS = [
+    [
+      "Land Rover Defender OCTA",
+      "Toyota Fortuner GR-S 4X4 Diesel AT (GR Sport)",
+      "Mahindra Scorpio N Z8L (4\u00d74) Automatic",
+      "10 Crore Cash (new notes, 500 notes only)",
+      "5 International trips every year for 5 years",
+      "10 Acre land",
+      "A penthouse"
+    ],
+    [
+      "Mercedes G 63 AMG (Night Package)",
+      "Range Rover Autobiography LWB",
+      "Toyota Vellfire Executive Lounge",
+      "25 Crore Cash (SWIFT transfer, no traces)",
+      "Private jet share \u2014 40 hours every year",
+      "Chattarpur farmhouse + golf club membership",
+      "Swiss vault access (numbered account)"
+    ],
+    [
+      "Rolls-Royce Cullinan (Starlight Headliner)",
+      "Bentley Bentayga EWB Azure",
+      "BMW X7 M60i (M Sport Pro)",
+      "100 Crore Cash or equivalent gold at today's rate",
+      "Yacht with Mumbai Marina berth included",
+      "Palace wing in Rajasthan + 12 staff",
+      "Maldives island lease (49 years)"
+    ]
+  ];
+  var WILDCARDS = [
+    "Sasural ka WiFi password (fibre, unlimited)",
+    "Netflix premium \u2014 4 screens, ads-free, forever",
+    "Lifetime laddoo box refills",
+    "Family functions se full exemption certificate",
+    "Personal CA for black-to-white conversion",
+    "Saas ke taane \u2014 lifetime extended warranty"
   ];
 
   function dynamicItems(d) {
@@ -801,7 +829,9 @@
     var html = "";
     var idx = 0;
     var delay;
-    FIXED.forEach(function (t) {
+    var fixed = FIX_SETS[Math.floor(Math.random() * FIX_SETS.length)]
+      .concat([WILDCARDS[Math.floor(Math.random() * WILDCARDS.length)]]);
+    fixed.forEach(function (t) {
       delay = reduceMotion() ? 0 : idx * 45;
       html += '<li style="animation-delay:' + delay + 'ms"><span class="num">' + (idx + 1) + '</span><span class="txt">' + t + '</span></li>';
       idx++;
